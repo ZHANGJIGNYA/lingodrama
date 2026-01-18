@@ -53,8 +53,7 @@ export function SocialMode({ quiz, questionNumber, totalQuestions, onAnswer }: S
   const isCorrect = selected === quiz.correctAnswer
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-900/20 to-background flex flex-col">
-      {/* 聊天头部 */}
+    <div className="min-h-screen bg-gradient-to-b from-purple-900/20 to-background flex flex-col film-grain vignette">
       <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 z-10">
         <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
           <User className="w-6 h-6 text-primary-foreground" />

@@ -45,8 +45,7 @@ export function VibeMode({ quiz, questionNumber, totalQuestions, onAnswer }: Vib
   const isCorrect = selected === quiz.correctAnswer
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Instagram 风格顶部栏 */}
+    <div className="min-h-screen bg-black film-grain vignette">
       <div className="bg-black border-b border-gray-800 px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 rounded-full p-0.5">

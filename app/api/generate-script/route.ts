@@ -147,110 +147,116 @@ function buildScriptPrompt(
   userSettings: any
 ) {
   const genreDescriptions = {
-    romance: 'Romance/CEO drama style - heart-pounding, sweet interactions, confession moments',
-    workplace: 'Workplace comedy - embarrassing situations, social disasters, funny daily life',
-    slice_of_life: 'Slice of life/healing - beautiful moments, unexpected joy, warm encounters',
+    romance: 'Romance/CEO drama - heart-pounding, sweet interactions, confession moments, high-stakes romance',
+    workplace: 'Workplace drama - career decisions, office politics, professional dilemmas',
+    slice_of_life: 'Slice of life - daily choices, personal relationships, meaningful moments',
+  }
+
+  const playerRoles = {
+    romance: 'the romantic lead (CEO\'s love interest, new employee, etc.)',
+    workplace: 'a professional (manager, team lead, consultant, etc.)',
+    slice_of_life: 'yourself in a daily situation',
   }
 
   const englishLevel = userSettings?.english_level || 'B1'
-  const definitionPref = userSettings?.definition_preference || 'native_language'
+  const nativeLanguage = userSettings?.native_language || 'zh-CN'
+  const nativeLanguageNames: Record<string, string> = {
+    'zh-CN': 'Simplified Chinese',
+    'zh-TW': 'Traditional Chinese',
+    'ja': 'Japanese',
+    'ko': 'Korean',
+    'es': 'Spanish',
+    'fr': 'French',
+    'de': 'German',
+  }
 
   const wordList = words.map(w => `- ${w.word}${w.definition ? ` (${w.definition})` : ''}`).join('\n')
 
-  // 根据单词数量调整故事长度
-  const storyLength = words.length <= 3 ? '8-10' : words.length <= 5 ? '10-12' : '12-15'
+  return `You are the "Game Master" for an interactive thriller/romance English learning app.
+Your goal is to test the user's understanding of vocabulary words by embedding them into high-stakes "Plot Choices".
 
-  return `You are a creative scriptwriter for an English learning app. Create a short, engaging chat-style drama script.
+# Task
+Create **${words.length} interactive scenarios** (one for each word below).
+Each scenario must be a **multiple-choice challenge** where the user must understand the target word to make the correct decision.
 
-**Target vocabulary words (MUST include all ${words.length} words):**
+# Input Data
+**Target Words (MUST create one scenario for each):**
 ${wordList}
 
 **Genre:** ${genre} - ${genreDescriptions[genre]}
-
+**Player Role:** ${playerRoles[genre]}
 **User English Level:** ${englishLevel} (CEFR standard)
-- Use vocabulary and grammar appropriate for this level
-- Main dialogue should be simple enough for ${englishLevel} learners
-- Only the target vocabulary words should be challenging
+**User's Native Language:** ${nativeLanguageNames[nativeLanguage]}
 
-**Script Requirements:**
-1. **Length:** ${storyLength} chat messages (adjusted for ${words.length} vocabulary words)
-2. **Structure:**
-   - Opening: Immediate hook (1-2 messages)
-   - Conflict: Quick tension build-up (2-3 messages)
-   - Climax: Use vocabulary words naturally (3-4 messages)
-   - Twist ending: Unexpected happy conclusion (1-2 messages)
+# Critical Rules
 
-3. **Vocabulary Integration:**
-   - Each target word must appear naturally in context
-   - **CRITICAL**: ONLY highlight the exact target words from the vocabulary list above
-   - DO NOT highlight common words like "my", "the", "and", "is", etc.
-   - Highlight words with appropriate styles:
-     * "glow": Key vocabulary, important moments
-     * "shake": Emotional emphasis
-     * "redline": Mistakes or warnings
-     * "blur": Mystery or surprise
+## 1. Language & Difficulty (CRITICAL)
+- Write the "context" field in **English ONLY**
+- Adjust sentence complexity to match ${englishLevel} proficiency
+- **Smart Aid System**: If a word in the context is significantly harder than ${englishLevel} (but NOT the target word), add it to "context_aids" with explanation
+- **DO NOT** provide translation for the target word - user must infer from context
 
-4. **Chat Format:**
-   - Mix of dialogue bubbles and narration
-   - Speakers: Character names, "You", "Narration", "Your thoughts", "System"
-   - Keep it conversational and modern
-   - Use emojis sparingly for emphasis
+## 2. Choice Logic
+- Provide 2-3 plausible options
+- Options must look like reasonable plot actions
+- Only ONE option demonstrates correct understanding of the target word
+- Wrong choices lead to failure/danger/drama
+- Make it a genuine test - can't just guess
 
-5. **Definitions:**
-   - Provide TWO definitions for each highlighted word:
-     * definition_simple_english: Simple English explanation (for ${englishLevel} learner)
-     * definition_native: Chinese translation
+## 3. Feedback (CRITICAL)
+- **success_feedback**: Explain WHY this choice was correct (in ${nativeLanguageNames[nativeLanguage]})
+- **failure_feedback**: Explain the correct meaning and why the chosen action was wrong (in ${nativeLanguageNames[nativeLanguage]})
+- Be encouraging but educational
 
-**Output Format (JSON):**
+# Output Format (JSON)
+
 \`\`\`json
 {
-  "messages": [
+  "scenarios": [
     {
       "id": "1",
-      "speaker": "Narration",
-      "is_user": false,
-      "content": "Scene description...",
-      "emotion": "neutral",
-      "highlighted_words": []
-    },
-    {
-      "id": "2",
-      "speaker": "Character Name",
-      "is_user": false,
-      "content": "Dialogue with the word example in it.",
-      "emotion": "excited",
-      "highlighted_words": [
+      "vocabulary_id": "word-id-1",
+      "target_word": "ambiguous",
+      "player_role": "detective",
+      "context": "The suspect's alibi is ambiguous. You have two hours before the press conference. What do you do?",
+      "context_aids": [
         {
-          "word": "example",
-          "vocabulary_id": "example-1",
-          "style": "glow",
-          "definition_simple_english": "a thing used to show what others are like",
-          "definition_native": "例子；范例"
+          "word": "alibi",
+          "explanation": "不在场证明 (proof of being elsewhere)"
         }
-      ]
+      ],
+      "choices": [
+        {
+          "id": "1a",
+          "text": "Immediately arrest the suspect",
+          "is_correct": false
+        },
+        {
+          "id": "1b",
+          "text": "Investigate further to clarify the unclear details",
+          "is_correct": true
+        },
+        {
+          "id": "1c",
+          "text": "Trust the alibi and close the case",
+          "is_correct": false
+        }
+      ],
+      "correct_choice_id": "1b",
+      "success_feedback": "正确！ambiguous 意思是'模棱两可的、不明确的'。你选择进一步调查来澄清不清楚的细节，这说明你理解了这个词的含义。",
+      "failure_feedback": "ambiguous 的意思是'模棱两可的、不明确的'。当证据不明确时，应该调查清楚，而不是贸然行动或轻信。"
     }
   ]
 }
 \`\`\`
 
-**CRITICAL RULES:**
-1. The "content" field must be PLAIN TEXT ONLY - NO HTML tags, NO special formatting
-2. Do NOT write <span>, <div>, or any HTML in the content field
-3. The word should appear naturally in the content as plain text
-4. The highlighting will be added automatically by the app based on "highlighted_words" array
-5. Example:
-   - ✅ CORRECT: "content": "This is an example sentence."
-   - ❌ WRONG: "content": "This is an <span class='glow'>example</span> sentence."
+# Important Notes
+- Each scenario must be self-contained and exciting
+- Create dramatic tension around the word's meaning
+- Make success feel rewarding and failure educational
+- Ensure choices genuinely test word understanding, not general knowledge
+- Keep context concise (2-3 sentences max)
+- Use ${englishLevel}-appropriate vocabulary EXCEPT for target words
 
-**Important:**
-- ALL messages must be in ENGLISH (dialogue, narration, everything)
-- Only definitions can be in Chinese
-- Make it engaging like a TikTok short drama (quick hook, conflict, twist)
-- Ensure vocabulary words appear in dramatic/memorable moments
-- Keep it appropriate for language learners (clear context clues)
-- **CRITICAL**: Maintain proper spacing and punctuation in all content
-- **CRITICAL**: Only use "highlighted_words" for the target vocabulary from the list above
-- Do NOT create highlighted_words entries for common words (my, the, and, is, etc.)
-
-Generate the script now as valid JSON only (no markdown, no explanation).`
+Generate the interactive scenarios now as valid JSON only (no markdown, no explanation).`
 }

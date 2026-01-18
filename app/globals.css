@@ -274,3 +274,80 @@ body {
     0 0 20px var(--primary),
     0 0 40px var(--primary);
 }
+
+/* app/globals.css (Add to the end) */
+
+/* 老电影噪点动画 */
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  20% { transform: translate(-15%, 5%); }
+  30% { transform: translate(7%, -25%); }
+  40% { transform: translate(-5%, 25%); }
+  50% { transform: translate(-15%, 10%); }
+  60% { transform: translate(15%, 0%); }
+  70% { transform: translate(0%, 15%); }
+  80% { transform: translate(3%, 35%); }
+  90% { transform: translate(-10%, 10%); }
+}
+
+/* 放映机灯光闪烁 */
+@keyframes flicker {
+  0% { opacity: 0.85; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.85; }
+  15% { opacity: 0.95; }
+  20% { opacity: 0.85; }
+  25% { opacity: 0.95; }
+  30% { opacity: 0.75; }
+  35% { opacity: 0.95; }
+  40% { opacity: 0.85; }
+  45% { opacity: 0.95; }
+  50% { opacity: 0.85; }
+  55% { opacity: 0.95; }
+  60% { opacity: 0.85; }
+  65% { opacity: 0.95; }
+  70% { opacity: 0.9; }
+  75% { opacity: 0.95; }
+  80% { opacity: 0.85; }
+  85% { opacity: 0.95; }
+  90% { opacity: 0.85; }
+  95% { opacity: 0.95; }
+  100% { opacity: 0.85; }
+}
+
+/* 胶片线条划痕 */
+@keyframes scratch {
+  0% { transform: translateX(0); opacity: 0.1; }
+  10% { transform: translateX(-50px); opacity: 0.3; }
+  20% { transform: translateX(30px); opacity: 0.1; }
+  30% { transform: translateX(-20px); opacity: 0.4; }
+  40% { transform: translateX(40px); opacity: 0.1; }
+  50% { transform: translateX(-60px); opacity: 0.3; }
+  60% { transform: translateX(20px); opacity: 0.1; }
+  100% { transform: translateX(0); opacity: 0.1; }
+}
+
+/* 工具类：胶片噪点层 */
+.film-grain::after {
+  content: "";
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  width: 200%;
+  height: 200vh;
+  background: transparent url('http://assets.iceable.com/img/noise-transparent.png') repeat 0 0;
+  background-repeat: repeat;
+  animation: grain 8s steps(10) infinite;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* 工具类：复古暗角 */
+.vignette {
+  box-shadow: inset 0 0 150px rgba(0,0,0,0.9);
+  animation: flicker 4s infinite;
+}

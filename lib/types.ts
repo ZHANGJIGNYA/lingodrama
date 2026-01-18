@@ -96,7 +96,42 @@ export interface UserSettings {
   created_at: string
 }
 
-// 新的剧情结构（聊天式）
+// 新的剧情结构（互动选择式）
+export interface InteractiveScript {
+  id: string
+  user_id: string
+  vocabulary_ids: string[] // 本剧情复习的词汇
+  genre: 'romance' | 'workplace' | 'mystery' | 'slice_of_life'
+  scenarios: InteractiveScenario[] // 每个单词一个场景
+  created_at: string
+}
+
+export interface InteractiveScenario {
+  id: string
+  vocabulary_id: string
+  target_word: string // 要测试的单词
+  context: string // 场景描述（英文）
+  context_aids?: ContextAid[] // 场景中超出用户水平的词的辅助说明
+  choices: Choice[] // 选项（2-4个）
+  correct_choice_id: string
+  success_feedback: string // 选对后的反馈（用户母语）
+  failure_feedback: string // 选错后的反馈（用户母语）
+  player_role?: string // 玩家角色（如"Detective", "CEO's Assistant"）
+}
+
+export interface ContextAid {
+  word: string // 超纲词
+  explanation: string // 母语翻译或简单英语解释
+}
+
+export interface Choice {
+  id: string
+  text: string // 选项文本（英文）
+  is_correct: boolean
+  consequence?: string // 选择后的后果描述（可选）
+}
+
+// 旧的聊天式剧情（保留以兼容）
 export interface ChatScript {
   id: string
   user_id: string

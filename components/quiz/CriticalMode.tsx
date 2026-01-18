@@ -50,8 +50,7 @@ export function CriticalMode({ quiz, questionNumber, totalQuestions, onAnswer }:
   const isTimeout = selected === 'TIMEOUT'
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* CRT 扫描线效果 */}
+    <div className="min-h-screen bg-black relative overflow-hidden film-grain vignette">
       <div className="crt-scanlines absolute inset-0 z-10 pointer-events-none" />
 
       {/* 红色警报背景闪烁 */}
