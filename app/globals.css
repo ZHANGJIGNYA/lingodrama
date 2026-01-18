@@ -1,26 +1,276 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 黑金主题配色 */
+  --background: #0a0a0a;
+  --foreground: #ededed;
+
+  /* shadcn/ui 颜色变量 */
+  --card: #121212;
+  --card-foreground: #ededed;
+  --popover: #121212;
+  --popover-foreground: #ededed;
+  --primary: #d4af37; /* 金色 */
+  --primary-foreground: #0a0a0a;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #ededed;
+  --muted: #1a1a1a;
+  --muted-foreground: #888888;
+  --accent: #d4af37;
+  --accent-foreground: #0a0a0a;
+  --destructive: #dc2626; /* 红色警报 */
+  --destructive-foreground: #ededed;
+  --border: #333333;
+  --input: #1a1a1a;
+  --ring: #d4af37;
+  --radius: 0.5rem;
+
+  /* 自定义颜色 */
+  --success: #10b981; /* 绿色（安全） */
+  --warning: #f59e0b; /* 橙色（警告） */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+}
+
+/* ============================================
+   Review 剧场特效
+   ============================================ */
+
+/* 关键词高亮 - 基础发光 */
+.keyword-highlight {
+  color: var(--primary);
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+/* 高亮样式：模糊（需要点击/悬停才能看清） */
+.highlight-blur {
+  filter: blur(3px);
+  background: rgba(59, 130, 246, 0.2);
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: filter 0.3s ease;
+  cursor: help;
+  position: relative;
+}
+
+.highlight-blur:hover {
+  filter: blur(0);
+}
+
+/* 统一的 tooltip 样式 - 适配聊天气泡 */
+.highlight-blur:hover::after,
+.highlight-shake:hover::after,
+.highlight-redline:hover::after,
+.highlight-glow:hover::after {
+  content: attr(data-definition);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  background: rgba(30, 30, 30, 0.98);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: tooltip-in 0.2s ease-out;
+  backdrop-filter: blur(8px);
+}
+
+/* tooltip 小三角 */
+.highlight-blur:hover::before,
+.highlight-shake:hover::before,
+.highlight-redline:hover::before,
+.highlight-glow:hover::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(30, 30, 30, 0.98);
+  z-index: 999;
+  pointer-events: none;
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* 高亮样式：震动 */
+.highlight-shake {
+  color: #f59e0b;
+  font-weight: 700;
+  display: inline-block;
+  cursor: help;
+  position: relative;
+  text-decoration: underline;
+  text-decoration-color: rgba(245, 158, 11, 0.4);
+  text-underline-offset: 3px;
+}
+
+.highlight-shake.active {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* 高亮样式：红色下划线（错误/危险） */
+.highlight-redline {
+  color: #ef4444;
+  font-weight: 700;
+  text-decoration: underline wavy #ef4444;
+  text-underline-offset: 3px;
+  cursor: help;
+  position: relative;
+}
+
+/* 高亮样式：发光（重点词汇） */
+.highlight-glow {
+  color: #fbbf24;
+  font-weight: 700;
+  background: linear-gradient(to right, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.1));
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: help;
+  position: relative;
+  animation: subtle-glow 3s ease-in-out infinite;
+}
+
+@keyframes subtle-glow {
+  0%, 100% {
+    background: linear-gradient(to right, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.1));
+  }
+  50% {
+    background: linear-gradient(to right, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.3), rgba(251, 191, 36, 0.15));
+  }
+}
+
+/* 震动效果 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* 模糊淡入效果 */
+@keyframes blur-in {
+  0% {
+    filter: blur(10px);
+    opacity: 0;
+  }
+  100% {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+.blur-in {
+  animation: blur-in 0.6s ease-out;
+}
+
+/* 打字机效果 */
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 1.5s steps(40, end);
+}
+
+/* CRT 扫描线效果 (用于 Quiz Critical 模式) */
+.crt-scanlines {
+  position: relative;
+}
+
+.crt-scanlines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* 毛玻璃效果 */
+.glass-effect {
+  backdrop-filter: blur(12px) saturate(180%);
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* 霓虹边框 */
+.neon-border {
+  box-shadow:
+    0 0 5px var(--primary),
+    0 0 10px var(--primary),
+    0 0 20px var(--primary),
+    0 0 40px var(--primary);
 }
