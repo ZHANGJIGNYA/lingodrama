@@ -351,3 +351,21 @@ body {
   box-shadow: inset 0 0 150px rgba(0,0,0,0.9);
   animation: flicker 4s infinite;
 }
+
+/* ============================================
+   Drama Mode Animations
+   ============================================ */
+
+/* 单词呼吸灯效果 */
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(253, 224, 71, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(253, 224, 71, 0.8), 0 0 25px rgba(253, 224, 71, 0.6);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}

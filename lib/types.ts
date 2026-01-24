@@ -223,3 +223,53 @@ export interface QuizMode {
   options: string[] // 4个选项
   correctAnswer: string
 }
+
+// 连续剧模式数据结构
+export type SeriesType = 'female' | 'male' | 'neutral'
+export type ReviewType = 'highlight' | 'underline' | 'context' | 'partial_mask' | 'blank_fill' | 'natural'
+
+export interface DramaSeries {
+  id: SeriesType
+  title: string
+  subtitle: string
+  totalEpisodes: number
+  genre: string
+  emoji: string
+  gradient: string
+  episodes: DramaEpisode[]
+}
+
+export interface DramaEpisode {
+  id: number
+  title: string
+  hook: string // 吸引人的标题
+  duration: string // "8 min"
+  unlocked: boolean
+  cliffhanger?: string // 上集结尾悬念
+  masteryRequired: number // 解锁需要的掌握度 (0-100)
+  vocabIds: string[] // 对应 Vocabulary 的 id
+  messages: DramaMessage[]
+}
+
+export interface DramaMessage {
+  id: string
+  sender: string // "Sarah" 或 "You"
+  avatar: string // emoji
+  text: string
+  vocabs: VocabInMessage[] // 消息中的单词标记
+  isImage: boolean
+  imageDesc?: string // 如果是图片消息，描述图片内容
+}
+
+export interface VocabInMessage {
+  word: string
+  type: ReviewType
+  revealed?: boolean // 对于遮挡类型，是否已揭示
+}
+
+export interface WordState {
+  word: string
+  type: ReviewType
+  revealed: boolean
+  vocabularyId: string
+}
