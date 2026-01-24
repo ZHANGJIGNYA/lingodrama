@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { motion } from 'framer-motion'
 import type { DramaMessage, WordState, Vocabulary } from '@/lib/types'
 import VocabWord from './VocabWord'
@@ -32,7 +33,7 @@ export default function MessageBubble({
     }
 
     let text = message.text
-    const parts: (string | JSX.Element)[] = []
+    const parts: (string | React.ReactElement)[] = []
     let lastIndex = 0
 
     // Sort vocabs by their position in the text (longest first to avoid partial matches)
