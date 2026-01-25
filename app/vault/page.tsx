@@ -1,276 +1,286 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Loader2, Trash2, Tag } from 'lucide-react'
-import type { Vocabulary } from '@/lib/types'
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { MoreHorizontal } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
+import type { Vocabulary } from '@/lib/types'
 
-// Mock 已添加的单词
-const mockVocabulary: Vocabulary[] = [
-  {
-    id: '1',
-    user_id: 'mock',
-    word: 'elastic',
-    definition: '有弹性的；灵活的',
-    part_of_speech: 'adjective',
-    example_sentence: 'The elastic band stretched easily.',
-    difficulty_level: 3,
-    emotional_intensity: 'vibe',
-    tags: ['physical', 'property'],
-    next_review_date: new Date().toISOString(),
-    review_count: 0,
-    mastery_level: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    user_id: 'mock',
-    word: 'cynical',
-    definition: '愤世嫉俗的；悲观的',
-    part_of_speech: 'adjective',
-    example_sentence: 'He had a cynical view of politics.',
-    difficulty_level: 4,
-    emotional_intensity: 'social',
-    tags: ['emotion', 'personality'],
-    next_review_date: new Date().toISOString(),
-    review_count: 2,
-    mastery_level: 35,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    user_id: 'mock',
-    word: 'critical',
-    definition: '危急的；关键的',
-    part_of_speech: 'adjective',
-    example_sentence: 'The patient is in critical condition.',
-    difficulty_level: 3,
-    emotional_intensity: 'critical',
-    tags: ['medical', 'emergency'],
-    next_review_date: new Date().toISOString(),
-    review_count: 5,
-    mastery_level: 68,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
+// Mock 数据
+const mockArchives: Array<{ text: string; level: string; source: string }> = [
+  { text: 'Apple', level: 'A1', source: 'Daily Life' },
+  { text: 'Run', level: 'A1', source: "The CEO's Lie" },
+  { text: 'Travel', level: 'A2', source: 'Neon Rain' },
+  { text: 'Promise', level: 'A2', source: "The CEO's Lie" },
+  { text: 'Strategy', level: 'B1', source: "Dragon's Pact" },
+  { text: 'Betrayal', level: 'B1', source: "The CEO's Lie" },
+  { text: 'Contract', level: 'B2', source: "The CEO's Lie" },
+  { text: 'Negotiate', level: 'B2', source: 'Neon Rain' },
+  { text: 'Vulnerable', level: 'C1', source: "Dragon's Pact" },
+  { text: 'Hypothesis', level: 'C1', source: 'Neon Rain' },
+  { text: 'Serendipity', level: 'C2', source: 'Daily Life' },
+  { text: 'Ephemeral', level: 'C2', source: "The CEO's Lie" },
 ]
 
-export default function VaultPage() {
-  const { vocabularyList, setVocabularyList } = useAppStore()
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+// 环形图组件
+function RingChart({
+  data,
+  colors,
+  label,
+}: {
+  data: Record<string, number>
+  colors: string[]
+  label: string
+}) {
+  const total = Object.values(data).reduce((a, b) => a + b, 0) || 1
+  let start = 0
+  const gradientParts: string[] = []
+  const legends: Array<{ key: string; val: number; color: string }> = []
 
-  // 使用 Zustand store 的数据，如果为空则使用 mock 数据
-  const [vocabulary, setVocabulary] = useState<Vocabulary[]>(
-    vocabularyList.length > 0 ? vocabularyList : mockVocabulary
-  )
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim()) return
-
-    setIsLoading(true)
-
-    // 模拟 AI 处理延迟
-    setTimeout(() => {
-      const words = input
-        .split(/[,，\s]+/)
-        .map(w => w.trim())
-        .filter(w => w.length > 0)
-
-      // 创建新的单词条目
-      const newVocabulary: Vocabulary[] = words.map((word, index) => ({
-        id: `new-${Date.now()}-${index}`,
-        user_id: 'mock',
-        word: word,
-        definition: '待 AI 分析...', // 后续接入 Claude API
-        part_of_speech: 'unknown',
-        example_sentence: '',
-        difficulty_level: 1,
-        emotional_intensity: 'vibe',
-        tags: [],
-        next_review_date: new Date().toISOString(), // 立即可复习
-        review_count: 0,
-        mastery_level: 0,
-        easiness_factor: 2.5, // SM-2 默认值
-        interval: 0, // 第一次复习
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }))
-
-      // 添加到本地 state
-      const updatedVocabulary = [...newVocabulary, ...vocabulary]
-      setVocabulary(updatedVocabulary)
-
-      // 同步到 Zustand store
-      setVocabularyList(updatedVocabulary)
-
-      console.log('✅ Added words to Vault:', words)
-      console.log('📚 Total vocabulary count:', updatedVocabulary.length)
-
-      alert(`✅ Added ${words.length} word(s): ${words.join(', ')}\n\n📖 Total: ${updatedVocabulary.length} words\n💡 Go to Review page to generate AI stories!`)
-
-      setInput('')
-      setIsLoading(false)
-    }, 1500)
-  }
-
-  const handleDelete = (id: string) => {
-    const updatedVocabulary = vocabulary.filter(v => v.id !== id)
-    setVocabulary(updatedVocabulary)
-    setVocabularyList(updatedVocabulary)
-  }
-
-  const getMasteryColor = (level: number) => {
-    if (level >= 80) return 'text-success'
-    if (level >= 50) return 'text-warning'
-    return 'text-muted-foreground'
-  }
-
-  const getIntensityBadge = (intensity?: string) => {
-    const config = {
-      critical: { label: '生死时速', color: 'bg-destructive/20 text-destructive' },
-      social: { label: '社交排雷', color: 'bg-primary/20 text-primary' },
-      vibe: { label: '审美鉴定', color: 'bg-success/20 text-success' },
+  Object.entries(data).forEach(([key, val], i) => {
+    if (val > 0) {
+      const pct = (val / total) * 100
+      const color = colors[i % colors.length]
+      gradientParts.push(`${color} ${start}% ${start + pct}%`)
+      legends.push({ key, val, color })
+      start += pct
     }
-    const badge = config[intensity as keyof typeof config]
-    if (!badge) return null
+  })
 
-    return (
-      <span className={`text-xs px-2 py-1 rounded ${badge.color}`}>
-        {badge.label}
-      </span>
-    )
+  if (gradientParts.length === 0) {
+    gradientParts.push('#333 0% 100%')
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-screen-sm">
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+    <div className="flex items-center justify-between gap-4">
+      {/* Ring */}
+      <div
+        className="w-[120px] h-[120px] rounded-full relative flex items-center justify-center shrink-0"
+        style={{
+          background: `conic-gradient(${gradientParts.join(', ')})`,
+          boxShadow: '0 0 30px rgba(0,0,0,0.2)',
+        }}
       >
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          📥 词汇金库
-        </h1>
-        <p className="text-muted-foreground">
-          批量录入单词，AI 自动分析
-        </p>
-      </motion.header>
+        <div
+          className="w-[100px] h-[100px] rounded-full flex flex-col items-center justify-center"
+          style={{
+            background: '#151c2f',
+            boxShadow: 'inset 0 0 15px rgba(0,0,0,0.5)',
+          }}
+        >
+          <div className="text-2xl font-bold text-white leading-none">{total}</div>
+          <div className="text-[9px] text-white/50 mt-1">{label}</div>
+        </div>
+      </div>
 
-      {/* 输入表单 */}
-      <motion.form
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        onSubmit={handleSubmit}
-        className="mb-8"
-      >
-        <div className="bg-card border border-border rounded-lg p-4">
-          <label className="block text-sm font-medium text-muted-foreground mb-2">
-            输入单词（用逗号或空格分隔）
-          </label>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="例如：elastic, cynical, vibrant"
-            className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-            rows={3}
-            disabled={isLoading}
-          />
-
-          <motion.button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="mt-3 w-full bg-primary text-primary-foreground rounded-lg py-3 px-4 font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      {/* Legend */}
+      <div className="flex flex-col gap-2 flex-1">
+        {legends.map(({ key, val, color }) => (
+          <div
+            key={key}
+            className="flex items-center justify-between text-[11px] pb-1 border-b border-white/5 last:border-b-0"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                AI 分析中...
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4" />
-                添加到金库
-              </>
-            )}
-          </motion.button>
-        </div>
-      </motion.form>
-
-      {/* 词汇列表 */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            已收录 {vocabulary.length} 个单词
-          </h2>
-        </div>
-
-        <AnimatePresence>
-          {vocabulary.map((word, index) => (
-            <motion.div
-              key={word.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-xl font-bold text-foreground">
-                      {word.word}
-                    </h3>
-                    <span className="text-xs text-muted-foreground">
-                      {word.part_of_speech}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {word.definition}
-                  </p>
-                  {word.example_sentence && (
-                    <p className="text-xs text-muted-foreground italic">
-                      "{word.example_sentence}"
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => handleDelete(word.id)}
-                  className="text-muted-foreground hover:text-destructive transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 mt-3">
-                {getIntensityBadge(word.emotional_intensity)}
-
-                {word.tags.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Tag className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {word.tags.slice(0, 2).join(', ')}
-                    </span>
-                  </div>
-                )}
-
-                <div className="ml-auto">
-                  <span className={`text-xs font-medium ${getMasteryColor(word.mastery_level)}`}>
-                    掌握度 {word.mastery_level}%
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+            <div className="flex items-center gap-2 text-white/70">
+              <div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: color }}
+              />
+              <span>{key}</span>
+            </div>
+            <div className="font-bold text-white">{val}</div>
+          </div>
+        ))}
       </div>
     </div>
   )
+}
+
+export default function VocabularyPage() {
+  const { vocabularyList } = useAppStore()
+  const [archives, setArchives] = useState(mockArchives)
+
+  // 合并 store 中的词汇到 archives
+  useEffect(() => {
+    if (vocabularyList.length > 0) {
+      const storeWords = vocabularyList.map((v) => ({
+        text: v.word,
+        level: getLevelFromDifficulty(v.difficulty_level),
+        source: 'Added',
+      }))
+      setArchives([...storeWords, ...mockArchives])
+    }
+  }, [vocabularyList])
+
+  // 计算 CEFR 分布
+  const levelDistribution: Record<string, number> = {
+    A1: 0,
+    A2: 0,
+    B1: 0,
+    B2: 0,
+    C1: 0,
+    C2: 0,
+  }
+  archives.forEach((w) => {
+    if (levelDistribution[w.level] !== undefined) {
+      levelDistribution[w.level]++
+    }
+  })
+
+  // 计算来源分布
+  const sourceDistribution: Record<string, number> = {}
+  archives.forEach((w) => {
+    sourceDistribution[w.source] = (sourceDistribution[w.source] || 0) + 1
+  })
+  const topSources = Object.fromEntries(
+    Object.entries(sourceDistribution)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+  )
+
+  const getLevelColor = (level: string) => {
+    if (level.startsWith('C')) return '#f43f5e'
+    if (level.startsWith('B')) return '#facc15'
+    return '#4ade80'
+  }
+
+  return (
+    <div className="min-h-screen relative overflow-hidden">
+      {/* 动态渐变背景 */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: 'linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a)',
+          backgroundSize: '400% 400%',
+          animation: 'gradientBG 15s ease infinite',
+        }}
+      />
+
+      {/* 光晕效果 */}
+      <div
+        className="fixed w-[300px] h-[300px] rounded-full opacity-50 -top-[50px] -left-[100px] -z-5 pointer-events-none"
+        style={{
+          background: '#4f46e5',
+          filter: 'blur(70px)',
+          animation: 'float 10s infinite ease-in-out',
+        }}
+      />
+      <div
+        className="fixed w-[200px] h-[200px] rounded-full opacity-50 bottom-[100px] -right-[50px] -z-5 pointer-events-none"
+        style={{
+          background: '#ec4899',
+          filter: 'blur(70px)',
+          animation: 'float 10s infinite ease-in-out',
+          animationDelay: '-5s',
+        }}
+      />
+
+      <div className="container mx-auto px-6 py-8 pb-32 max-w-md">
+        {/* Header */}
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-[32px] font-extrabold leading-tight mb-6"
+        >
+          Vocabulary
+        </motion.h1>
+
+        {/* CEFR Distribution Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-3xl p-5 mb-4"
+          style={{
+            background: 'rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+        >
+          <div className="flex justify-between items-center text-xs font-bold text-white/80 mb-5 tracking-wide">
+            <span>CEFR DISTRIBUTION</span>
+            <MoreHorizontal className="w-4 h-4 opacity-60" />
+          </div>
+          <RingChart
+            data={levelDistribution}
+            colors={['#4ade80', '#22c55e', '#facc15', '#f97316', '#f87171', '#be123c']}
+            label="Words"
+          />
+        </motion.div>
+
+        {/* Source Breakdown Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="rounded-3xl p-5 mb-6"
+          style={{
+            background: 'rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+        >
+          <div className="flex justify-between items-center text-xs font-bold text-white/80 mb-5 tracking-wide">
+            <span>SOURCE BREAKDOWN</span>
+            <MoreHorizontal className="w-4 h-4 opacity-60" />
+          </div>
+          <RingChart
+            data={topSources}
+            colors={['#3b82f6', '#06b6d4', '#8b5cf6']}
+            label="Scripts"
+          />
+        </motion.div>
+
+        {/* Library List */}
+        <div className="text-xs font-bold text-white/60 mb-3 tracking-wider">
+          LIBRARY
+        </div>
+        <div className="space-y-2">
+          {archives.map((word, index) => (
+            <motion.div
+              key={`${word.text}-${index}`}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05 * Math.min(index, 10) }}
+              className="flex justify-between items-center p-3.5 rounded-xl"
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid transparent',
+              }}
+            >
+              <span className="text-white">{word.text}</span>
+              <span
+                className="text-[10px] px-2 py-0.5 rounded border border-white/20 opacity-70"
+                style={{ color: getLevelColor(word.level) }}
+              >
+                {word.level}
+              </span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* CSS Keyframes */}
+      <style jsx global>{`
+        @keyframes gradientBG {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(20px, 40px); }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+// 根据难度等级返回 CEFR 级别
+function getLevelFromDifficulty(difficulty: number): string {
+  if (difficulty <= 1) return 'A1'
+  if (difficulty <= 2) return 'A2'
+  if (difficulty <= 3) return 'B1'
+  if (difficulty <= 4) return 'B2'
+  if (difficulty <= 5) return 'C1'
+  return 'C2'
 }

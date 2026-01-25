@@ -2,77 +2,72 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Archive, Film, Zap, Settings } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Home, BookOpen, User } from 'lucide-react'
 
 const navItems = [
   {
-    name: 'Dashboard',
+    name: 'Home',
     href: '/',
     icon: Home,
-    label: '看板',
   },
   {
-    name: 'Vault',
+    name: 'Vocabulary',
     href: '/vault',
-    icon: Archive,
-    label: '金库',
+    icon: BookOpen,
   },
   {
-    name: 'Review',
-    href: '/review',
-    icon: Film,
-    label: '剧场',
-  },
-  {
-    name: 'Quiz',
-    href: '/quiz',
-    icon: Zap,
-    label: '挑战',
-  },
-  {
-    name: 'Settings',
+    name: 'Profile',
     href: '/settings',
-    icon: Settings,
-    label: '设置',
+    icon: User,
   },
 ]
 
 export function BottomNav() {
   const pathname = usePathname()
 
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border">
-      <div className="max-w-screen-sm mx-auto px-4 py-3">
-        <div className="flex items-center justify-around">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            const Icon = item.icon
+  // 在 review 页面隐藏导航栏
+  if (pathname === '/review') {
+    return null
+  }
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex flex-col items-center gap-1 transition-colors',
-                  'min-w-[64px] py-1',
-                  isActive
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <Icon
-                  className={cn(
-                    'w-6 h-6 transition-transform',
-                    isActive && 'scale-110'
-                  )}
-                />
-                <span className="text-xs font-medium">{item.label}</span>
-              </Link>
-            )
-          })}
-        </div>
-      </div>
+  return (
+    <nav
+      className="fixed bottom-[30px] left-1/2 -translate-x-1/2 z-50 px-[30px] py-3 rounded-[40px] flex gap-10"
+      style={{
+        background: 'rgba(15, 23, 42, 0.9)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+      }}
+    >
+      {navItems.map((item) => {
+        const isActive = pathname === item.href
+        const Icon = item.icon
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="relative"
+          >
+            <Icon
+              className={`w-5 h-5 transition-all duration-300 ${
+                isActive
+                  ? 'text-white -translate-y-[3px]'
+                  : 'text-white/40 hover:text-white/70'
+              }`}
+              style={{
+                textShadow: isActive ? '0 0 15px rgba(255, 255, 255, 0.4)' : 'none',
+              }}
+            />
+            {isActive && (
+              <div
+                className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white"
+              />
+            )}
+          </Link>
+        )
+      })}
     </nav>
   )
 }
