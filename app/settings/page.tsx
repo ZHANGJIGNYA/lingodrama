@@ -2,311 +2,284 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { ArrowLeft, User } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/store'
+import { cn } from '@/lib/utils'
 
-export default function ProfilePage() {
+export default function SettingsPage() {
+  const router = useRouter()
   const { userSettings, setUserSettings } = useAppStore()
 
-  const [lang, setLang] = useState<'en' | 'zh'>('en')
-  const [cefrLevel, setCefrLevel] = useState<string>(userSettings?.english_level || 'B1')
-  const [definitionMode, setDefinitionMode] = useState<'en' | 'native'>('en')
+  const [interfaceLanguage, setInterfaceLanguage] = useState<'en' | 'zh'>('en')
+  const [cefrLevel, setCefrLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1'>(userSettings?.english_level || 'B1')
+  const [definitionStyle, setDefinitionStyle] = useState<'english' | 'native'>('english')
   const [perspective, setPerspective] = useState<'male' | 'female' | 'neutral'>('neutral')
   const [wordsPerReview, setWordsPerReview] = useState<number>(userSettings?.words_per_review || 5)
 
-  const cefrLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+  const cefrLevels: Array<'A1' | 'A2' | 'B1' | 'B2' | 'C1'> = ['A1', 'A2', 'B1', 'B2', 'C1']
+
+  const handleSave = () => {
+    if (userSettings) {
+      setUserSettings({
+        ...userSettings,
+        english_level: cefrLevel,
+        words_per_review: wordsPerReview as 3 | 5 | 8,
+      })
+    }
+  }
 
   const handleReset = () => {
     if (confirm('Reset all data?')) {
-      // Reset settings
-      setLang('en')
+      setInterfaceLanguage('en')
       setCefrLevel('B1')
-      setDefinitionMode('en')
+      setDefinitionStyle('english')
       setPerspective('neutral')
       setWordsPerReview(5)
     }
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* 动态渐变背景 */}
-      <div
-        className="fixed inset-0 -z-10"
-        style={{
-          background: 'linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a)',
-          backgroundSize: '400% 400%',
-          animation: 'gradientBG 15s ease infinite',
-        }}
-      />
-
-      {/* 光晕效果 */}
-      <div
-        className="fixed w-[300px] h-[300px] rounded-full opacity-50 -top-[50px] -left-[100px] -z-5 pointer-events-none"
-        style={{
-          background: '#4f46e5',
-          filter: 'blur(70px)',
-          animation: 'float 10s infinite ease-in-out',
-        }}
-      />
-      <div
-        className="fixed w-[200px] h-[200px] rounded-full opacity-50 bottom-[100px] -right-[50px] -z-5 pointer-events-none"
-        style={{
-          background: '#ec4899',
-          filter: 'blur(70px)',
-          animation: 'float 10s infinite ease-in-out',
-          animationDelay: '-5s',
-        }}
-      />
-
-      <div className="container mx-auto px-6 py-8 pb-32 max-w-md">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Mobile Container */}
+      <div className="mx-auto max-w-md min-h-screen flex flex-col">
         {/* Header */}
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-[32px] font-extrabold leading-tight mb-6"
-        >
-          Profile
-        </motion.h1>
-
-        {/* Interface Language Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-3xl p-5 mb-4"
-          style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          <div className="text-[11px] font-bold tracking-wider text-white/60 mb-3 uppercase">
-            Interface Language
-          </div>
-          <div
-            className="flex p-1 rounded-xl gap-1"
-            style={{ background: 'rgba(0, 0, 0, 0.3)' }}
-          >
+        <header className="px-4 pt-6 pb-2">
+          <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setLang('en')}
-              className={`flex-1 py-2 px-4 rounded-lg text-xs font-semibold transition-all ${
-                lang === 'en'
-                  ? 'bg-white/12 text-white shadow'
-                  : 'text-white/60'
-              }`}
+              onClick={() => router.push('/')}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
             >
-              English
+              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </button>
-            <button
-              onClick={() => setLang('zh')}
-              className={`flex-1 py-2 px-4 rounded-lg text-xs font-semibold transition-all ${
-                lang === 'zh'
-                  ? 'bg-white/12 text-white shadow'
-                  : 'text-white/60'
-              }`}
-            >
-              中文
-            </button>
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-electric-purple to-danger-red flex items-center justify-center">
+              <User className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="font-serif text-xl font-bold text-foreground">
+                Profile Settings
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Customize your learning experience
+              </p>
+            </div>
           </div>
-        </motion.div>
+        </header>
 
-        {/* CEFR Level Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-3xl p-5 mb-4"
-          style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          <div className="text-[11px] font-bold tracking-wider text-white/60 mb-3 uppercase">
-            English Level (CEFR)
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {cefrLevels.map((level) => (
-              <button
-                key={level}
-                onClick={() => setCefrLevel(level)}
-                className={`py-3 rounded-xl text-sm font-semibold transition-all ${
-                  cefrLevel === level
-                    ? 'text-black scale-[1.02]'
-                    : 'text-white/60'
-                }`}
-                style={{
-                  background:
-                    cefrLevel === level
-                      ? '#06b6d4'
-                      : 'rgba(255, 255, 255, 0.05)',
-                  border:
-                    cefrLevel === level
-                      ? '1px solid #06b6d4'
-                      : '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow:
-                    cefrLevel === level
-                      ? '0 0 15px rgba(6, 182, 212, 0.4)'
-                      : 'none',
-                }}
+        {/* Main Content */}
+        <main className="flex-1 px-4 pb-8 overflow-y-auto">
+          <div className="space-y-4">
+            {/* Interface Language */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="p-4 bg-card border border-border rounded-xl"
+            >
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Interface Language
+              </h3>
+              <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setInterfaceLanguage('en')}
+                  className={cn(
+                    'flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200',
+                    interfaceLanguage === 'en'
+                      ? 'bg-card text-foreground shadow-md'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInterfaceLanguage('zh')}
+                  className={cn(
+                    'flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200',
+                    interfaceLanguage === 'zh'
+                      ? 'bg-card text-foreground shadow-md'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  中文
+                </button>
+              </div>
+            </motion.div>
+
+            {/* CEFR Level */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="p-4 bg-card border border-border rounded-xl"
+            >
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                English Level (CEFR)
+              </h3>
+              <div className="grid grid-cols-3 gap-2">
+                {cefrLevels.map((level) => (
+                  <motion.button
+                    key={level}
+                    type="button"
+                    onClick={() => setCefrLevel(level)}
+                    whileTap={{ scale: 0.95 }}
+                    className={cn(
+                      'py-3 px-4 rounded-lg text-sm font-semibold transition-all duration-200 border',
+                      cefrLevel === level
+                        ? 'bg-electric-purple text-white border-electric-purple shadow-lg shadow-electric-purple/30'
+                        : 'bg-secondary text-muted-foreground border-border hover:border-electric-purple/50 hover:text-foreground'
+                    )}
+                  >
+                    {level}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Definitions & Perspective */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="p-4 bg-card border border-border rounded-xl space-y-4"
+            >
+              {/* Definitions */}
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Definitions
+                </h3>
+                <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setDefinitionStyle('english')}
+                    className={cn(
+                      'flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200',
+                      definitionStyle === 'english'
+                        ? 'bg-card text-foreground shadow-md'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    English Sent.
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDefinitionStyle('native')}
+                    className={cn(
+                      'flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200',
+                      definitionStyle === 'native'
+                        ? 'bg-card text-foreground shadow-md'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    Native Trans.
+                  </button>
+                </div>
+              </div>
+
+              {/* Perspective */}
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Perspective
+                </h3>
+                <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+                  {(['male', 'female', 'neutral'] as const).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setPerspective(option)}
+                      className={cn(
+                        'flex-1 py-2.5 px-3 rounded-md text-sm font-medium capitalize transition-all duration-200',
+                        perspective === option
+                          ? 'bg-card text-foreground shadow-md'
+                          : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Words Per Review */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="p-4 bg-card border border-border rounded-xl"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Words Per Review
+                </h3>
+                <span className="text-2xl font-bold text-electric-purple">
+                  {wordsPerReview}
+                </span>
+              </div>
+              <div className="relative">
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={wordsPerReview}
+                  onChange={(e) => setWordsPerReview(Number(e.target.value))}
+                  className="w-full h-2 bg-secondary rounded-full appearance-none cursor-pointer accent-electric-purple
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-5
+                    [&::-webkit-slider-thumb]:h-5
+                    [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-white
+                    [&::-webkit-slider-thumb]:shadow-lg
+                    [&::-webkit-slider-thumb]:shadow-electric-purple/30
+                    [&::-webkit-slider-thumb]:border-2
+                    [&::-webkit-slider-thumb]:border-electric-purple
+                    [&::-moz-range-thumb]:w-5
+                    [&::-moz-range-thumb]:h-5
+                    [&::-moz-range-thumb]:rounded-full
+                    [&::-moz-range-thumb]:bg-white
+                    [&::-moz-range-thumb]:border-2
+                    [&::-moz-range-thumb]:border-electric-purple"
+                />
+                <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
+                  <span>1</span>
+                  <span>5</span>
+                  <span>10</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Buttons */}
+            <div className="space-y-3 pt-2">
+              {/* Save Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                type="button"
+                onClick={handleSave}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3.5 bg-danger-red text-white font-semibold rounded-xl shadow-lg shadow-danger-red/30"
               >
-                {level}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+                Save Changes
+              </motion.button>
 
-        {/* Definitions & Perspective Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-3xl p-5 mb-4"
-          style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          <div className="text-[11px] font-bold tracking-wider text-white/60 mb-3 uppercase">
-            Definitions
-          </div>
-          <div
-            className="flex p-1 rounded-xl gap-1 mb-5"
-            style={{ background: 'rgba(0, 0, 0, 0.3)' }}
-          >
-            <button
-              onClick={() => setDefinitionMode('en')}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                definitionMode === 'en'
-                  ? 'bg-white/12 text-white shadow'
-                  : 'text-white/60'
-              }`}
-            >
-              English Sent.
-            </button>
-            <button
-              onClick={() => setDefinitionMode('native')}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                definitionMode === 'native'
-                  ? 'bg-white/12 text-white shadow'
-                  : 'text-white/60'
-              }`}
-            >
-              Native Trans.
-            </button>
-          </div>
-
-          <div className="text-[11px] font-bold tracking-wider text-white/60 mb-3 uppercase">
-            Perspective
-          </div>
-          <div
-            className="flex p-1 rounded-xl gap-1"
-            style={{ background: 'rgba(0, 0, 0, 0.3)' }}
-          >
-            <button
-              onClick={() => setPerspective('male')}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                perspective === 'male'
-                  ? 'bg-white/12 text-white shadow'
-                  : 'text-white/60'
-              }`}
-            >
-              Male
-            </button>
-            <button
-              onClick={() => setPerspective('female')}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                perspective === 'female'
-                  ? 'bg-white/12 text-white shadow'
-                  : 'text-white/60'
-              }`}
-            >
-              Female
-            </button>
-            <button
-              onClick={() => setPerspective('neutral')}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                perspective === 'neutral'
-                  ? 'bg-white/12 text-white shadow'
-                  : 'text-white/60'
-              }`}
-            >
-              Neutral
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Words per Review Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-3xl p-5 mb-4"
-          style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          <div className="flex justify-between items-center mb-3">
-            <div className="text-[11px] font-bold tracking-wider text-white/60 uppercase">
-              Words per Review
-            </div>
-            <div className="text-lg font-extrabold text-purple-400">
-              {wordsPerReview}
+              {/* Reset Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                type="button"
+                onClick={handleReset}
+                className="w-full py-3.5 bg-secondary text-muted-foreground font-semibold rounded-xl border border-border hover:text-foreground transition-colors"
+              >
+                Reset All Data
+              </motion.button>
             </div>
           </div>
-          <input
-            type="range"
-            min={3}
-            max={20}
-            value={wordsPerReview}
-            onChange={(e) => setWordsPerReview(Number(e.target.value))}
-            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-            }}
-          />
-        </motion.div>
-
-        {/* Reset Button */}
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          onClick={handleReset}
-          className="w-full py-4 rounded-2xl font-bold transition-all"
-          style={{
-            background: 'rgba(244, 63, 94, 0.15)',
-            color: '#f43f5e',
-            border: '1px solid #f43f5e',
-          }}
-        >
-          Reset All Data
-        </motion.button>
+        </main>
       </div>
-
-      {/* CSS Keyframes */}
-      <style jsx global>{`
-        @keyframes gradientBG {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(20px, 40px); }
-        }
-        input[type='range']::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #fff;
-          box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-          cursor: pointer;
-        }
-      `}</style>
     </div>
   )
 }

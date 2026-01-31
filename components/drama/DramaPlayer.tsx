@@ -54,7 +54,6 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
 
   const handleContinue = () => {
     if (currentMsgIndex >= episode.messages.length - 1) {
-      // Episode complete
       onComplete()
       return
     }
@@ -69,7 +68,6 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
   const handleWordClick = (word: string, vocab: Vocabulary) => {
     setSelectedVocab(vocab)
 
-    // Auto-close after 3 seconds
     if (autoCloseTimerRef.current) {
       clearTimeout(autoCloseTimerRef.current)
     }
@@ -104,36 +102,33 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
     .filter(Boolean) as Vocabulary[]
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${series.gradient} relative overflow-hidden`}>
-      {/* Film grain effect */}
-      <div className="film-grain absolute inset-0 pointer-events-none opacity-30" />
-
+    <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Header */}
-      <div className="relative z-10 px-4 py-4 bg-black/30 backdrop-blur-sm border-b border-white/10">
-        <div className="flex items-center justify-between mb-2">
+      <div className="relative z-10 px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-border">
+        <div className="flex items-center justify-between mb-2 max-w-md mx-auto">
           <button
             onClick={onBack}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 hover:bg-secondary rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-white" />
+            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </button>
 
           <div className="flex-1 text-center">
-            <div className="text-sm text-gray-300">Ep{episode.id}: {episode.title}</div>
+            <div className="text-xs text-muted-foreground">Ep{episode.id}: {episode.title}</div>
           </div>
 
           <button
             onClick={() => setShowVocabPanel(!showVocabPanel)}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 hover:bg-secondary rounded-lg transition-colors"
           >
-            <List className="w-5 h-5 text-white" />
+            <List className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
 
         {/* Progress bar */}
-        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-1 bg-secondary rounded-full overflow-hidden max-w-md mx-auto">
           <motion.div
-            className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+            className="h-full bg-gradient-to-r from-electric-purple to-danger-red"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.3 }}
@@ -148,27 +143,27 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            className="fixed right-0 top-0 bottom-0 w-80 bg-black/90 backdrop-blur-lg border-l border-white/20 z-20 p-6 overflow-y-auto"
+            className="fixed right-0 top-0 bottom-0 w-72 bg-card/95 backdrop-blur-lg border-l border-border z-20 p-5 overflow-y-auto"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">Words in this Episode</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif text-base font-bold text-foreground">Episode Words</h3>
               <button
                 onClick={() => setShowVocabPanel(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground text-sm"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {episodeVocabs.map((vocab) => (
                 <div
                   key={vocab.id}
                   onClick={() => handleWordClick(vocab.word, vocab)}
-                  className="p-3 bg-white/5 hover:bg-white/10 rounded-lg cursor-pointer transition-colors"
+                  className="p-3 bg-secondary/50 hover:bg-secondary rounded-lg cursor-pointer transition-colors border border-border"
                 >
-                  <div className="text-white font-semibold">{vocab.word}</div>
-                  <div className="text-sm text-gray-400">{vocab.definition}</div>
+                  <div className="text-sm font-semibold text-foreground">{vocab.word}</div>
+                  <div className="text-xs text-muted-foreground">{vocab.definition}</div>
                 </div>
               ))}
             </div>
@@ -177,7 +172,7 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
       </AnimatePresence>
 
       {/* Messages Container */}
-      <div className="relative z-10 max-w-3xl mx-auto px-4 py-6 pb-32 min-h-[calc(100vh-180px)]">
+      <div className="relative z-10 max-w-md mx-auto px-4 py-6 pb-32 min-h-[calc(100vh-180px)]">
         {visibleMessages.map((message) => (
           <MessageBubble
             key={message.id}
@@ -197,14 +192,14 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
             animate={{ opacity: 1 }}
             className="flex gap-3 mb-4"
           >
-            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xl">
+            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-lg">
               {episode.messages[currentMsgIndex + 1]?.avatar}
             </div>
-            <div className="bg-gray-800 px-6 py-4 rounded-2xl rounded-tl-sm">
+            <div className="bg-card border border-border px-5 py-3 rounded-2xl rounded-tl-sm">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </motion.div>
@@ -214,30 +209,30 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
       </div>
 
       {/* Bottom Continue Button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 z-10">
-        <div className="max-w-3xl mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/80 to-transparent p-4 z-10">
+        <div className="max-w-md mx-auto">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleContinue}
             disabled={isTyping}
-            className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-2xl transition-all ${
+            className={`w-full py-3.5 rounded-xl font-semibold text-base flex items-center justify-center gap-2 shadow-lg transition-all ${
               isComplete
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-purple-600 hover:bg-purple-700 text-white'
+                ? 'bg-luxury-gold text-black shadow-luxury-gold/30'
+                : 'bg-danger-red text-white shadow-danger-red/30'
             } ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isTyping ? (
               <>
-                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 Loading...
               </>
             ) : isComplete ? (
-              <>Complete Episode ✓</>
+              <>Complete Episode</>
             ) : (
               <>
                 Continue
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </>
             )}
           </motion.button>

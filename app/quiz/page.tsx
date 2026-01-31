@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import { CriticalMode } from '@/components/quiz/CriticalMode'
 import { SocialMode } from '@/components/quiz/SocialMode'
 import { VibeMode } from '@/components/quiz/VibeMode'
 import ProjectorLoading from '@/components/ProjectorLoading'
-import { Play } from 'lucide-react'
+import { Play, ArrowLeft } from 'lucide-react'
 import type { QuizMode } from '@/lib/types'
 
 // Mock 测验数据
@@ -74,6 +75,7 @@ const mockQuizWords: QuizMode[] = [
 ]
 
 export default function QuizPage() {
+  const router = useRouter()
   const [isStarted, setIsStarted] = useState(false)
   const [showProjector, setShowProjector] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState(0)
@@ -83,7 +85,6 @@ export default function QuizPage() {
 
   const handleStart = () => {
     setShowProjector(true)
-    // 放映机动画播放3.5秒后再显示内容
     setTimeout(() => {
       setShowProjector(false)
       setIsStarted(true)
@@ -94,19 +95,16 @@ export default function QuizPage() {
     if (isCorrect) {
       setScore(score + 1)
 
-      // 移到下一题
       if (currentQuestion < mockQuizWords.length - 1) {
         setTimeout(() => {
           setCurrentQuestion(currentQuestion + 1)
         }, 1500)
       } else {
-        // 全部答对，完成
         setTimeout(() => {
           setIsComplete(true)
         }, 1500)
       }
     } else {
-      // 答错，记录失败位置
       setFailedAt(currentQuestion)
       setTimeout(() => {
         setIsComplete(true)
@@ -130,47 +128,58 @@ export default function QuizPage() {
   // 启动页
   if (!isStarted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 via-gray-900 to-black flex items-center justify-center px-6 film-grain vignette">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-md"
-        >
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          {/* Back Button */}
+          <button
+            onClick={() => router.push('/')}
+            className="mb-8 p-2 hover:bg-secondary rounded-lg transition-colors inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back</span>
+          </button>
+
           <motion.div
-            animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
-            transition={{ repeat: Infinity, duration: 3 }}
-            className="text-7xl mb-6"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
           >
-            ⚡
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 3 }}
+              className="text-6xl mb-6"
+            >
+              ⚡
+            </motion.div>
+
+            <h1 className="font-serif text-3xl font-bold text-foreground mb-3">
+              Speed Quiz
+            </h1>
+
+            <p className="text-sm text-muted-foreground mb-8">
+              Test your reflexes. One wrong answer = Game Over.
+            </p>
+
+            <div className="bg-card border border-border rounded-xl p-4 mb-8">
+              <div className="text-2xl font-bold text-danger-red mb-1">
+                {mockQuizWords.length} Questions
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Critical · Social · Vibe
+              </div>
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleStart}
+              className="bg-danger-red text-white px-8 py-3.5 rounded-xl font-semibold text-base flex items-center gap-3 mx-auto transition-all shadow-lg shadow-danger-red/30"
+            >
+              <Play className="w-5 h-5" />
+              Start Challenge
+            </motion.button>
           </motion.div>
-
-          <h1 className="text-4xl font-bold text-white mb-4">
-            Speed Quiz
-          </h1>
-
-          <p className="text-gray-300 mb-8">
-            Test your reflexes. One wrong answer = Game Over.
-          </p>
-
-          <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-4 mb-8">
-            <div className="text-2xl font-bold text-red-300 mb-2">
-              {mockQuizWords.length} Questions
-            </div>
-            <div className="text-sm text-gray-400">
-              Critical · Social · Vibe
-            </div>
-          </div>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleStart}
-            className="bg-red-600 hover:bg-red-700 text-white px-10 py-4 rounded-xl font-bold text-lg flex items-center gap-3 mx-auto transition-all shadow-2xl"
-          >
-            <Play className="w-6 h-6" />
-            Start Challenge
-          </motion.button>
-        </motion.div>
+        </div>
       </div>
     )
   }
@@ -180,11 +189,11 @@ export default function QuizPage() {
     const isPassed = failedAt === null
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-900 via-gray-900 to-black px-4 film-grain vignette">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-md"
+          className="text-center max-w-md w-full"
         >
           <motion.div
             animate={{
@@ -192,16 +201,16 @@ export default function QuizPage() {
               scale: isPassed ? [1, 1.1, 1] : 1,
             }}
             transition={{ repeat: isPassed ? Infinity : 0, duration: 2 }}
-            className="text-8xl mb-6"
+            className="text-7xl mb-6"
           >
             {isPassed ? '🎉' : '💥'}
           </motion.div>
 
-          <h1 className={`text-3xl font-bold mb-4 ${isPassed ? 'text-success' : 'text-destructive'}`}>
+          <h1 className={`font-serif text-2xl font-bold mb-4 ${isPassed ? 'text-luxury-gold' : 'text-danger-red'}`}>
             {isPassed ? '完美通关！' : '挑战失败'}
           </h1>
 
-          <div className="bg-card border border-border rounded-lg p-6 mb-6">
+          <div className="bg-card border border-border rounded-xl p-6 mb-6">
             <p className="text-4xl font-bold text-foreground mb-2">
               {score} / {mockQuizWords.length}
             </p>
@@ -214,17 +223,17 @@ export default function QuizPage() {
 
           <div className="space-y-3">
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleRestart}
-              className="w-full bg-primary text-primary-foreground py-4 px-6 rounded-lg font-bold hover:opacity-90 transition-opacity"
+              className="w-full bg-danger-red text-white py-3.5 px-6 rounded-xl font-semibold shadow-lg shadow-danger-red/30"
             >
               再来一次
             </motion.button>
 
             <button
-              onClick={() => window.location.href = '/'}
-              className="w-full bg-secondary text-secondary-foreground py-4 px-6 rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+              onClick={() => router.push('/')}
+              className="w-full bg-secondary text-muted-foreground py-3.5 px-6 rounded-xl font-medium hover:text-foreground transition-colors"
             >
               返回首页
             </button>
@@ -238,7 +247,7 @@ export default function QuizPage() {
   const currentQuiz = mockQuizWords[currentQuestion]
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       {currentQuiz.type === 'critical' && (
         <CriticalMode
           quiz={currentQuiz}

@@ -2,8 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { ChevronRight } from 'lucide-react'
-import type { DramaSeries, SeriesType } from '@/lib/types'
-import { mockDramaSeries } from '@/lib/mockDramaSeries'
+import type { SeriesType } from '@/lib/types'
 
 interface SeriesSelectionProps {
   onSelectSeries: (seriesType: SeriesType) => void
@@ -15,7 +14,7 @@ const seriesData: Array<{
   subtitle: string
   hook: string
   emoji: string
-  gradient: string
+  accentColor: string
   targetAudience: string
   theme: string
 }> = [
@@ -25,7 +24,7 @@ const seriesData: Array<{
     subtitle: 'The Perfect Marriage',
     hook: 'I saw my husband with HER at the hotel... holding our wedding ring',
     emoji: '💔',
-    gradient: 'from-rose-900 via-pink-900 to-red-900',
+    accentColor: 'danger-red',
     targetAudience: 'Female-oriented',
     theme: 'Love, betrayal, and revenge'
   },
@@ -35,7 +34,7 @@ const seriesData: Array<{
     subtitle: 'The Corporate Game',
     hook: 'My boss just offered me a deal I can\'t refuse... or can I?',
     emoji: '💼',
-    gradient: 'from-blue-900 via-indigo-900 to-purple-900',
+    accentColor: 'electric-purple',
     targetAudience: 'Male-oriented',
     theme: 'Power, ambition, and conspiracy'
   },
@@ -45,7 +44,7 @@ const seriesData: Array<{
     subtitle: 'The Missing File',
     hook: 'They found the body in the office. Everyone\'s a suspect.',
     emoji: '🔍',
-    gradient: 'from-gray-900 via-slate-800 to-zinc-900',
+    accentColor: 'luxury-gold',
     targetAudience: 'Neutral',
     theme: 'Crime, investigation, and secrets'
   }
@@ -53,31 +52,25 @@ const seriesData: Array<{
 
 export default function SeriesSelection({ onSelectSeries }: SeriesSelectionProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-gray-900 to-black relative overflow-hidden">
-      {/* Film grain effect */}
-      <div className="film-grain absolute inset-0 pointer-events-none opacity-30" />
-
-      {/* Vignette effect */}
-      <div className="vignette absolute inset-0 pointer-events-none" />
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-12">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="relative z-10 max-w-md mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
-          <div className="text-6xl mb-4">🎬</div>
-          <h1 className="text-5xl font-bold text-white mb-3">
+          <div className="text-5xl mb-4">🎬</div>
+          <h1 className="font-serif text-3xl font-bold text-foreground mb-2">
             Choose Your Story
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-sm text-muted-foreground">
             Learn vocabulary through addictive drama
           </p>
         </motion.div>
 
         {/* Series Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="space-y-4 mb-8">
           {seriesData.map((series, index) => (
             <motion.div
               key={series.type}
@@ -89,49 +82,54 @@ export default function SeriesSelection({ onSelectSeries }: SeriesSelectionProps
                 onClick={() => onSelectSeries(series.type)}
                 className="w-full group"
               >
-                <div className={`relative bg-gradient-to-br ${series.gradient} rounded-2xl p-8 border-2 border-white/20 hover:border-white/40 transition-all overflow-hidden h-full`}>
-                  {/* Background pattern */}
-                  <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
+                <div className="relative bg-card rounded-2xl p-6 border border-border hover:border-electric-purple/50 transition-all overflow-hidden">
+                  {/* Accent line */}
+                  <div
+                    className={`absolute top-0 left-0 right-0 h-1 bg-${series.accentColor}`}
+                    style={{
+                      backgroundColor: series.accentColor === 'danger-red' ? '#E50914' :
+                                       series.accentColor === 'electric-purple' ? '#9D00FF' : '#FFD700'
+                    }}
+                  />
 
                   <div className="relative z-10">
-                    {/* Emoji */}
-                    <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">
-                      {series.emoji}
-                    </div>
+                    <div className="flex items-start gap-4">
+                      {/* Emoji */}
+                      <div className="text-4xl group-hover:scale-110 transition-transform">
+                        {series.emoji}
+                      </div>
 
-                    {/* Genre Badge */}
-                    <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-xs text-white/80 mb-3">
-                      {series.targetAudience}
-                    </div>
+                      <div className="flex-1 text-left">
+                        {/* Genre Badge */}
+                        <div className="inline-block px-2 py-0.5 bg-secondary rounded-full text-[10px] text-muted-foreground mb-2">
+                          {series.targetAudience}
+                        </div>
 
-                    {/* Title */}
-                    <h2 className="text-2xl font-bold text-white mb-2">
-                      {series.title}
-                    </h2>
+                        {/* Title */}
+                        <h2 className="font-serif text-xl font-bold text-foreground mb-1">
+                          {series.title}
+                        </h2>
 
-                    {/* Subtitle */}
-                    <h3 className="text-lg text-gray-200 mb-4 font-semibold">
-                      {series.subtitle}
-                    </h3>
+                        {/* Subtitle */}
+                        <h3 className="text-sm text-muted-foreground mb-3">
+                          {series.subtitle}
+                        </h3>
 
-                    {/* Hook */}
-                    <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 mb-4">
-                      <p className="text-sm text-gray-200 italic leading-relaxed">
-                        "{series.hook}"
-                      </p>
-                    </div>
+                        {/* Hook */}
+                        <div className="bg-secondary/50 rounded-lg p-3 mb-3">
+                          <p className="text-xs text-foreground/80 italic leading-relaxed">
+                            "{series.hook}"
+                          </p>
+                        </div>
 
-                    {/* Theme */}
-                    <p className="text-sm text-gray-300 mb-4">
-                      {series.theme}
-                    </p>
+                        {/* Theme */}
+                        <p className="text-xs text-muted-foreground">
+                          {series.theme}
+                        </p>
+                      </div>
 
-                    {/* CTA */}
-                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
-                      <span className="text-sm font-semibold text-white">
-                        Start Series
-                      </span>
-                      <ChevronRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
+                      {/* Arrow */}
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-electric-purple group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
                 </div>
@@ -145,42 +143,29 @@ export default function SeriesSelection({ onSelectSeries }: SeriesSelectionProps
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="text-center"
         >
-          <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-white/10 max-w-2xl mx-auto">
-            <h3 className="text-lg font-bold text-white mb-3">
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <h3 className="text-sm font-bold text-foreground mb-3 text-center">
               How It Works
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-300">
+            <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-3xl mb-2">📖</div>
-                <div className="font-semibold text-white mb-1">Read the Drama</div>
-                <div>Follow the story through chat-style messages</div>
+                <div className="text-2xl mb-1">📖</div>
+                <div className="text-[10px] font-semibold text-foreground mb-0.5">Read</div>
+                <div className="text-[10px] text-muted-foreground">Chat-style story</div>
               </div>
               <div>
-                <div className="text-3xl mb-2">💡</div>
-                <div className="font-semibold text-white mb-1">Learn Words</div>
-                <div>Tap highlighted words to see meanings</div>
+                <div className="text-2xl mb-1">💡</div>
+                <div className="text-[10px] font-semibold text-foreground mb-0.5">Learn</div>
+                <div className="text-[10px] text-muted-foreground">Tap for meanings</div>
               </div>
               <div>
-                <div className="text-3xl mb-2">🔓</div>
-                <div className="font-semibold text-white mb-1">Unlock Episodes</div>
-                <div>Master words to continue the story</div>
+                <div className="text-2xl mb-1">🔓</div>
+                <div className="text-[10px] font-semibold text-foreground mb-0.5">Unlock</div>
+                <div className="text-[10px] text-muted-foreground">Continue story</div>
               </div>
             </div>
           </div>
-        </motion.div>
-
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="text-center mt-8"
-        >
-          <p className="text-xs text-gray-500">
-            Choose any series - they all teach vocabulary effectively
-          </p>
         </motion.div>
       </div>
     </div>

@@ -1,276 +1,617 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { MoreHorizontal } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Search, ChevronRight, ChevronDown, X, Volume2, Star, Clock, TrendingUp, ArrowLeft } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/store'
-import type { Vocabulary } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 // Mock 数据
-const mockArchives: Array<{ text: string; level: string; source: string }> = [
-  { text: 'Apple', level: 'A1', source: 'Daily Life' },
-  { text: 'Run', level: 'A1', source: "The CEO's Lie" },
-  { text: 'Travel', level: 'A2', source: 'Neon Rain' },
-  { text: 'Promise', level: 'A2', source: "The CEO's Lie" },
-  { text: 'Strategy', level: 'B1', source: "Dragon's Pact" },
-  { text: 'Betrayal', level: 'B1', source: "The CEO's Lie" },
-  { text: 'Contract', level: 'B2', source: "The CEO's Lie" },
-  { text: 'Negotiate', level: 'B2', source: 'Neon Rain' },
-  { text: 'Vulnerable', level: 'C1', source: "Dragon's Pact" },
-  { text: 'Hypothesis', level: 'C1', source: 'Neon Rain' },
-  { text: 'Serendipity', level: 'C2', source: 'Daily Life' },
-  { text: 'Ephemeral', level: 'C2', source: "The CEO's Lie" },
+const mockArchives: Array<{
+  id: number
+  word: string
+  pos: string
+  posShort: string
+  phonetic: string
+  definition: string
+  fullDefinition: string
+  level: string
+  source: string
+  episode: string
+  scene: string
+  examples: string[]
+  synonyms: string[]
+  antonyms: string[]
+  timesReviewed: number
+  lastReviewed: string
+  mastery: number
+}> = [
+  {
+    id: 1,
+    word: 'Treacherous',
+    pos: 'Adjective',
+    posShort: 'Adj',
+    phonetic: '/ˈtretʃərəs/',
+    definition: 'Guilty of betrayal or deception',
+    fullDefinition: 'Guilty of or involving betrayal or deception; hazardous because of presenting hidden or unpredictable dangers.',
+    level: 'B2',
+    source: "The CEO's Secret",
+    episode: 'Ep. 3 - The Betrayal',
+    scene: '/images/scene-betrayal.jpg',
+    examples: [
+      'The treacherous road conditions made driving dangerous.',
+      'She discovered his treacherous plot against the company.',
+    ],
+    synonyms: ['disloyal', 'unfaithful', 'deceitful', 'perfidious'],
+    antonyms: ['loyal', 'faithful', 'trustworthy'],
+    timesReviewed: 5,
+    lastReviewed: '2 days ago',
+    mastery: 75,
+  },
+  {
+    id: 2,
+    word: 'Ruthless',
+    pos: 'Adjective',
+    posShort: 'Adj',
+    phonetic: '/ˈruːθləs/',
+    definition: 'Having no pity or compassion',
+    fullDefinition: 'Having or showing no pity or compassion for others; cruel and determined to succeed.',
+    level: 'B2',
+    source: "The CEO's Secret",
+    episode: 'Ep. 1 - The Takeover',
+    scene: '/images/scene-power.jpg',
+    examples: [
+      'He was ruthless in his pursuit of power.',
+      'The ruthless CEO fired half the staff.',
+    ],
+    synonyms: ['merciless', 'cruel', 'heartless', 'brutal'],
+    antonyms: ['merciful', 'compassionate', 'kind'],
+    timesReviewed: 8,
+    lastReviewed: '1 day ago',
+    mastery: 90,
+  },
+  {
+    id: 3,
+    word: 'Inevitable',
+    pos: 'Adjective',
+    posShort: 'Adj',
+    phonetic: '/ɪnˈevɪtəbl/',
+    definition: 'Certain to happen; unavoidable',
+    fullDefinition: 'Certain to happen; unavoidable. So frequently experienced or seen that it is completely predictable.',
+    level: 'B1',
+    source: "The CEO's Secret",
+    episode: 'Ep. 5 - The Confrontation',
+    scene: '/images/scene-confrontation.jpg',
+    examples: [
+      'Their confrontation was inevitable.',
+      'Change is inevitable in any growing company.',
+    ],
+    synonyms: ['unavoidable', 'inescapable', 'certain', 'sure'],
+    antonyms: ['avoidable', 'uncertain', 'preventable'],
+    timesReviewed: 3,
+    lastReviewed: '5 days ago',
+    mastery: 60,
+  },
+  {
+    id: 4,
+    word: 'Leverage',
+    pos: 'Noun',
+    posShort: 'N',
+    phonetic: '/ˈlevərɪdʒ/',
+    definition: 'Power to influence or act',
+    fullDefinition: 'The power to influence a person or situation to achieve a particular outcome; advantage gained from a position of strength.',
+    level: 'C1',
+    source: "The CEO's Secret",
+    episode: 'Ep. 2 - Power Play',
+    scene: '/images/scene-power.jpg',
+    examples: [
+      'She used her connections as leverage in the negotiation.',
+      'Having inside information gave him leverage.',
+    ],
+    synonyms: ['influence', 'power', 'advantage', 'clout'],
+    antonyms: ['weakness', 'disadvantage'],
+    timesReviewed: 2,
+    lastReviewed: '1 week ago',
+    mastery: 45,
+  },
+  {
+    id: 5,
+    word: 'Clandestine',
+    pos: 'Adjective',
+    posShort: 'Adj',
+    phonetic: '/klænˈdestɪn/',
+    definition: 'Kept secret or hidden',
+    fullDefinition: 'Kept secret or done secretively, especially because illicit or improper.',
+    level: 'C1',
+    source: "The CEO's Secret",
+    episode: 'Ep. 4 - Hidden Agenda',
+    scene: '/images/scene-betrayal.jpg',
+    examples: [
+      'They held clandestine meetings after midnight.',
+      'The clandestine affair was finally exposed.',
+    ],
+    synonyms: ['secret', 'covert', 'furtive', 'surreptitious'],
+    antonyms: ['open', 'public', 'overt'],
+    timesReviewed: 1,
+    lastReviewed: 'Today',
+    mastery: 30,
+  },
 ]
 
-// 环形图组件
-function RingChart({
-  data,
-  colors,
-  label,
+// CEFR Distribution data
+const cefrData = [
+  { level: 'A1', count: 12, color: '#22c55e' },
+  { level: 'A2', count: 18, color: '#84cc16' },
+  { level: 'B1', count: 24, color: '#eab308' },
+  { level: 'B2', count: 15, color: '#f97316' },
+  { level: 'C1', count: 8, color: '#ef4444' },
+  { level: 'C2', count: 3, color: '#dc2626' },
+]
+
+// Source Breakdown data
+const sourceData = [
+  { source: "The CEO's Secret", count: 28, color: '#E50914' },
+  { source: 'Revenge of Love', count: 19, color: '#9D00FF' },
+  { source: 'Manual Input', count: 15, color: '#FFD700' },
+  { source: 'Dark Romance', count: 12, color: '#06b6d4' },
+  { source: 'Other', count: 6, color: '#737373' },
+]
+
+// Collapsible Section Component
+function CollapsibleSection({
+  title,
+  defaultOpen = false,
+  children,
 }: {
-  data: Record<string, number>
-  colors: string[]
-  label: string
+  title: string
+  defaultOpen?: boolean
+  children: React.ReactNode
 }) {
-  const total = Object.values(data).reduce((a, b) => a + b, 0) || 1
-  let start = 0
-  const gradientParts: string[] = []
-  const legends: Array<{ key: string; val: number; color: string }> = []
-
-  Object.entries(data).forEach(([key, val], i) => {
-    if (val > 0) {
-      const pct = (val / total) * 100
-      const color = colors[i % colors.length]
-      gradientParts.push(`${color} ${start}% ${start + pct}%`)
-      legends.push({ key, val, color })
-      start += pct
-    }
-  })
-
-  if (gradientParts.length === 0) {
-    gradientParts.push('#333 0% 100%')
-  }
+  const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
-    <div className="flex items-center justify-between gap-4">
-      {/* Ring */}
-      <div
-        className="w-[120px] h-[120px] rounded-full relative flex items-center justify-center shrink-0"
-        style={{
-          background: `conic-gradient(${gradientParts.join(', ')})`,
-          boxShadow: '0 0 30px rgba(0,0,0,0.2)',
-        }}
+    <div className="rounded-xl bg-card border border-border overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
       >
-        <div
-          className="w-[100px] h-[100px] rounded-full flex flex-col items-center justify-center"
-          style={{
-            background: '#151c2f',
-            boxShadow: 'inset 0 0 15px rgba(0,0,0,0.5)',
-          }}
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          {title}
+        </span>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
         >
-          <div className="text-2xl font-bold text-white leading-none">{total}</div>
-          <div className="text-[9px] text-white/50 mt-1">{label}</div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-col gap-2 flex-1">
-        {legends.map(({ key, val, color }) => (
-          <div
-            key={key}
-            className="flex items-center justify-between text-[11px] pb-1 border-b border-white/5 last:border-b-0"
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
           >
-            <div className="flex items-center gap-2 text-white/70">
-              <div
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: color }}
-              />
-              <span>{key}</span>
-            </div>
-            <div className="font-bold text-white">{val}</div>
-          </div>
-        ))}
-      </div>
+            <div className="px-4 pb-4">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-export default function VocabularyPage() {
+// CEFR Bar Chart Component
+function CEFRChart() {
+  const maxCount = Math.max(...cefrData.map((d) => d.count))
+  const total = cefrData.reduce((sum, d) => sum + d.count, 0)
+
+  return (
+    <div className="space-y-3">
+      {cefrData.map((item) => (
+        <div key={item.level} className="flex items-center gap-3">
+          <span className="w-8 text-xs font-bold text-foreground">
+            {item.level}
+          </span>
+          <div className="flex-1 h-6 bg-secondary rounded-md overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${(item.count / maxCount) * 100}%` }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="h-full rounded-md flex items-center justify-end pr-2"
+              style={{ backgroundColor: item.color }}
+            >
+              <span className="text-[10px] font-bold text-white">
+                {item.count}
+              </span>
+            </motion.div>
+          </div>
+          <span className="w-10 text-right text-xs text-muted-foreground">
+            {Math.round((item.count / total) * 100)}%
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Source Breakdown Component
+function SourceBreakdown() {
+  const total = sourceData.reduce((sum, d) => sum + d.count, 0)
+
+  return (
+    <div className="space-y-3">
+      {sourceData.map((item) => (
+        <div key={item.source} className="flex items-center gap-3">
+          <div
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ backgroundColor: item.color }}
+          />
+          <span className="flex-1 text-sm text-foreground truncate">
+            {item.source}
+          </span>
+          <span className="text-sm font-medium text-foreground">
+            {item.count}
+          </span>
+          <span className="w-10 text-right text-xs text-muted-foreground">
+            {Math.round((item.count / total) * 100)}%
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Word Detail Modal
+function WordDetailModal({
+  word,
+  onClose,
+}: {
+  word: (typeof mockArchives)[0]
+  onClose: () => void
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md max-h-[85vh] bg-card rounded-t-3xl overflow-hidden"
+      >
+        {/* Header with Image */}
+        <div className="relative h-32 overflow-hidden">
+          <img
+            src={word.scene || '/placeholder.svg'}
+            alt={word.episode}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-colors"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
+          <div className="absolute bottom-4 left-4 right-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2 py-0.5 bg-electric-purple/20 text-electric-purple text-[10px] font-bold uppercase rounded">
+                {word.level}
+              </span>
+              <span className="px-2 py-0.5 bg-secondary text-muted-foreground text-[10px] font-medium rounded">
+                {word.pos}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-5 overflow-y-auto max-h-[calc(85vh-8rem)]">
+          {/* Word and Phonetic */}
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h2 className="font-serif text-2xl font-bold text-foreground">
+                {word.word}
+              </h2>
+              <button
+                type="button"
+                className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+              >
+                <Volume2 className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground">{word.phonetic}</p>
+          </div>
+
+          {/* Definition */}
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Definition
+            </h3>
+            <p className="text-sm text-foreground leading-relaxed">
+              {word.fullDefinition}
+            </p>
+          </div>
+
+          {/* Examples */}
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Examples
+            </h3>
+            <div className="space-y-2">
+              {word.examples.map((example, i) => (
+                <div
+                  key={i}
+                  className="p-3 bg-secondary/50 rounded-lg border-l-2 border-electric-purple"
+                >
+                  <p className="text-sm text-foreground italic">
+                    {'"'}
+                    {example}
+                    {'"'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Synonyms & Antonyms */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Synonyms
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {word.synonyms.map((syn) => (
+                  <span
+                    key={syn}
+                    className="px-2 py-1 bg-luxury-gold/10 text-luxury-gold text-xs rounded-md"
+                  >
+                    {syn}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Antonyms
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {word.antonyms.map((ant) => (
+                  <span
+                    key={ant}
+                    className="px-2 py-1 bg-danger-red/10 text-danger-red text-xs rounded-md"
+                  >
+                    {ant}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Source Info */}
+          <div className="p-3 bg-secondary/30 rounded-xl">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs text-muted-foreground">From:</span>
+              <span className="text-sm font-medium text-foreground">
+                {word.source}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">{word.episode}</p>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-3 bg-card border border-border rounded-xl text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <TrendingUp className="w-3 h-3 text-luxury-gold" />
+                <span className="text-lg font-bold text-foreground">
+                  {word.mastery}%
+                </span>
+              </div>
+              <span className="text-[10px] text-muted-foreground uppercase">
+                Mastery
+              </span>
+            </div>
+            <div className="p-3 bg-card border border-border rounded-xl text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Star className="w-3 h-3 text-electric-purple" />
+                <span className="text-lg font-bold text-foreground">
+                  {word.timesReviewed}
+                </span>
+              </div>
+              <span className="text-[10px] text-muted-foreground uppercase">
+                Reviews
+              </span>
+            </div>
+            <div className="p-3 bg-card border border-border rounded-xl text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Clock className="w-3 h-3 text-muted-foreground" />
+              </div>
+              <span className="text-[10px] text-muted-foreground">
+                {word.lastReviewed}
+              </span>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full py-3 bg-danger-red text-white font-semibold rounded-xl shadow-lg shadow-danger-red/30"
+          >
+            Review Now
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+export default function VaultPage() {
+  const router = useRouter()
   const { vocabularyList } = useAppStore()
+  const [selectedWord, setSelectedWord] = useState<(typeof mockArchives)[0] | null>(null)
   const [archives, setArchives] = useState(mockArchives)
 
   // 合并 store 中的词汇到 archives
   useEffect(() => {
     if (vocabularyList.length > 0) {
-      const storeWords = vocabularyList.map((v) => ({
-        text: v.word,
+      const storeWords = vocabularyList.map((v, index) => ({
+        id: 100 + index,
+        word: v.word,
+        pos: v.part_of_speech || 'Unknown',
+        posShort: (v.part_of_speech || 'Unk').slice(0, 3),
+        phonetic: '',
+        definition: v.definition,
+        fullDefinition: v.definition,
         level: getLevelFromDifficulty(v.difficulty_level),
         source: 'Added',
+        episode: 'User Added',
+        scene: '/images/scene-power.jpg',
+        examples: v.example_sentence ? [v.example_sentence] : [],
+        synonyms: [],
+        antonyms: [],
+        timesReviewed: v.review_count,
+        lastReviewed: 'Recently',
+        mastery: v.mastery_level,
       }))
       setArchives([...storeWords, ...mockArchives])
     }
   }, [vocabularyList])
 
-  // 计算 CEFR 分布
-  const levelDistribution: Record<string, number> = {
-    A1: 0,
-    A2: 0,
-    B1: 0,
-    B2: 0,
-    C1: 0,
-    C2: 0,
-  }
-  archives.forEach((w) => {
-    if (levelDistribution[w.level] !== undefined) {
-      levelDistribution[w.level]++
-    }
-  })
-
-  // 计算来源分布
-  const sourceDistribution: Record<string, number> = {}
-  archives.forEach((w) => {
-    sourceDistribution[w.source] = (sourceDistribution[w.source] || 0) + 1
-  })
-  const topSources = Object.fromEntries(
-    Object.entries(sourceDistribution)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-  )
-
-  const getLevelColor = (level: string) => {
-    if (level.startsWith('C')) return '#f43f5e'
-    if (level.startsWith('B')) return '#facc15'
-    return '#4ade80'
-  }
-
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* 动态渐变背景 */}
-      <div
-        className="fixed inset-0 -z-10"
-        style={{
-          background: 'linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a)',
-          backgroundSize: '400% 400%',
-          animation: 'gradientBG 15s ease infinite',
-        }}
-      />
-
-      {/* 光晕效果 */}
-      <div
-        className="fixed w-[300px] h-[300px] rounded-full opacity-50 -top-[50px] -left-[100px] -z-5 pointer-events-none"
-        style={{
-          background: '#4f46e5',
-          filter: 'blur(70px)',
-          animation: 'float 10s infinite ease-in-out',
-        }}
-      />
-      <div
-        className="fixed w-[200px] h-[200px] rounded-full opacity-50 bottom-[100px] -right-[50px] -z-5 pointer-events-none"
-        style={{
-          background: '#ec4899',
-          filter: 'blur(70px)',
-          animation: 'float 10s infinite ease-in-out',
-          animationDelay: '-5s',
-        }}
-      />
-
-      <div className="container mx-auto px-6 py-8 pb-32 max-w-md">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Mobile Container */}
+      <div className="mx-auto max-w-md min-h-screen flex flex-col">
         {/* Header */}
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-[32px] font-extrabold leading-tight mb-6"
-        >
-          Vocabulary
-        </motion.h1>
-
-        {/* CEFR Distribution Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-3xl p-5 mb-4"
-          style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          <div className="flex justify-between items-center text-xs font-bold text-white/80 mb-5 tracking-wide">
-            <span>CEFR DISTRIBUTION</span>
-            <MoreHorizontal className="w-4 h-4 opacity-60" />
-          </div>
-          <RingChart
-            data={levelDistribution}
-            colors={['#4ade80', '#22c55e', '#facc15', '#f97316', '#f87171', '#be123c']}
-            label="Words"
-          />
-        </motion.div>
-
-        {/* Source Breakdown Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-3xl p-5 mb-6"
-          style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          <div className="flex justify-between items-center text-xs font-bold text-white/80 mb-5 tracking-wide">
-            <span>SOURCE BREAKDOWN</span>
-            <MoreHorizontal className="w-4 h-4 opacity-60" />
-          </div>
-          <RingChart
-            data={topSources}
-            colors={['#3b82f6', '#06b6d4', '#8b5cf6']}
-            label="Scripts"
-          />
-        </motion.div>
-
-        {/* Library List */}
-        <div className="text-xs font-bold text-white/60 mb-3 tracking-wider">
-          LIBRARY
-        </div>
-        <div className="space-y-2">
-          {archives.map((word, index) => (
-            <motion.div
-              key={`${word.text}-${index}`}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.05 * Math.min(index, 10) }}
-              className="flex justify-between items-center p-3.5 rounded-xl"
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid transparent',
-              }}
+        <header className="px-4 pt-6 pb-2">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/')}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
             >
-              <span className="text-white">{word.text}</span>
-              <span
-                className="text-[10px] px-2 py-0.5 rounded border border-white/20 opacity-70"
-                style={{ color: getLevelColor(word.level) }}
-              >
-                {word.level}
-              </span>
-            </motion.div>
-          ))}
-        </div>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+            </button>
+            <div>
+              <h1 className="font-serif text-xl font-bold text-foreground">
+                My Words
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {archives.length} words collected
+              </p>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 px-4 pb-8 overflow-y-auto">
+          <div className="space-y-4 mt-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <div className="flex items-center gap-3 px-4 py-3 bg-secondary/80 border border-border rounded-xl">
+                <Search className="w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search words..."
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Collapsible Stats */}
+            <CollapsibleSection title="CEFR Distribution">
+              <CEFRChart />
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Source Breakdown">
+              <SourceBreakdown />
+            </CollapsibleSection>
+
+            {/* Vocabulary List */}
+            <div className="space-y-3 mt-4">
+              {archives.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => setSelectedWord(item)}
+                  className="group relative overflow-hidden rounded-xl bg-card border border-border hover:border-electric-purple/50 transition-all cursor-pointer"
+                >
+                  <div className="flex items-stretch">
+                    {/* Scene Thumbnail */}
+                    <div className="w-20 h-24 flex-shrink-0 relative overflow-hidden">
+                      <img
+                        src={item.scene || '/placeholder.svg'}
+                        alt={item.episode}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card" />
+                      {/* CEFR Badge */}
+                      <div className="absolute top-2 left-2">
+                        <span className="px-1.5 py-0.5 bg-black/60 text-white text-[10px] font-bold rounded">
+                          {item.level}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 p-3 flex flex-col justify-center min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-serif text-base font-bold text-foreground truncate">
+                          {item.word}
+                        </h3>
+                        <span className="flex-shrink-0 px-1.5 py-0.5 bg-electric-purple/10 text-electric-purple text-[10px] font-bold uppercase rounded">
+                          {item.posShort}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-1.5">
+                        {item.definition}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground/70">
+                          {item.source}
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                        <span className="text-[10px] text-muted-foreground/70">
+                          {item.mastery}% mastery
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action */}
+                    <div className="flex items-center pr-3">
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-electric-purple transition-colors" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
 
-      {/* CSS Keyframes */}
-      <style jsx global>{`
-        @keyframes gradientBG {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(20px, 40px); }
-        }
-      `}</style>
+      {/* Word Detail Modal */}
+      <AnimatePresence>
+        {selectedWord && (
+          <WordDetailModal
+            word={selectedWord}
+            onClose={() => setSelectedWord(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
