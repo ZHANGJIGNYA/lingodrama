@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, ArrowLeft, List } from 'lucide-react'
+import { ChevronRight, ArrowLeft, List, Zap, Home } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type { DramaEpisode, DramaSeries, WordState, Vocabulary } from '@/lib/types'
 import { useAppStore } from '@/lib/store'
 import MessageBubble from './MessageBubble'
@@ -17,6 +18,7 @@ interface DramaPlayerProps {
 
 export default function DramaPlayer({ series, episode, onBack, onComplete }: DramaPlayerProps) {
   const { vocabularyList, storyVocabulary } = useAppStore()
+  const router = useRouter()
 
   // Combine vocabularyList and storyVocabulary for lookup
   const allVocabulary = [...storyVocabulary, ...vocabularyList]
@@ -26,6 +28,7 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
   const [wordStates, setWordStates] = useState<Record<string, WordState>>({})
   const [selectedVocab, setSelectedVocab] = useState<Vocabulary | null>(null)
   const [showVocabPanel, setShowVocabPanel] = useState(false)
+  const [showCompletionModal, setShowCompletionModal] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -57,7 +60,8 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
 
   const handleContinue = () => {
     if (currentMsgIndex >= episode.messages.length - 1) {
-      onComplete()
+      // Show completion modal instead of immediately completing
+      setShowCompletionModal(true)
       return
     }
 
@@ -66,6 +70,15 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
       setCurrentMsgIndex(prev => prev + 1)
       setIsTyping(false)
     }, 800)
+  }
+
+  const handleGoToQuiz = () => {
+    onComplete()
+    router.push('/quiz')
+  }
+
+  const handleFinishWithoutQuiz = () => {
+    onComplete()
   }
 
   const handleWordClick = (word: string, vocab: Vocabulary) => {
@@ -106,6 +119,16 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Cinematic film effects */}
+      <div className="fixed inset-0 pointer-events-none z-50">
+        {/* Film grain overlay */}
+        <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNhKSIvPjwvc3ZnPg==')]" />
+        {/* Vignette */}
+        <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.4)]" />
+        {/* Subtle scanlines */}
+        <div className="absolute inset-0 opacity-[0.02] bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]" />
+      </div>
+
       {/* Header */}
       <div className="relative z-10 px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between mb-2 max-w-md mx-auto">
@@ -244,6 +267,74 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
 
       {/* Translation Card */}
       <TranslationCard vocab={selectedVocab} onClose={closeTranslation} />
+
+      {/* Episode Completion Modal */}
+      <AnimatePresence>
+        {showCompletionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="w-full max-w-sm"
+            >
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-2xl text-center">
+                {/* Success animation */}
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="text-5xl mb-4"
+                >
+                  🎬
+                </motion.div>
+
+                <h2 className="font-serif text-xl font-bold text-foreground mb-2">
+                  Episode Complete!
+                </h2>
+                <p className="text-sm text-muted-foreground mb-2">
+                  You reviewed {episodeVocabs.length} words in this episode
+                </p>
+
+                {/* Words summary */}
+                <div className="flex flex-wrap gap-1.5 justify-center mb-6">
+                  {episodeVocabs.map((v) => (
+                    <span
+                      key={v.id}
+                      className="px-2 py-1 text-xs bg-electric-purple/10 text-electric-purple rounded-full"
+                    >
+                      {v.word}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Quiz option */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleGoToQuiz}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-luxury-gold text-black font-bold rounded-xl shadow-lg shadow-luxury-gold/30 mb-3"
+                >
+                  <Zap className="w-5 h-5" />
+                  Quiz Now (Recommended)
+                </motion.button>
+
+                <button
+                  onClick={handleFinishWithoutQuiz}
+                  className="w-full py-3 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
+                >
+                  <Home className="w-4 h-4" />
+                  Skip Quiz
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

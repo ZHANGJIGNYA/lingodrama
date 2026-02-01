@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Flame,
   Inbox,
+  AlertTriangle,
   Search,
   Play,
   Fingerprint,
@@ -25,6 +26,7 @@ import {
   Plus,
   Loader2,
   Zap,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
@@ -233,9 +235,18 @@ function MissionDashboard({
   wordsToReviewCount: number;
   vocabularyList: import("@/lib/types").Vocabulary[];
 }) {
-  const { addVocabulary, removeVocabulary, pushWordsToStory, storyVocabulary } = useAppStore();
+  const { addVocabulary, removeVocabulary, pushWordsToStory, storyVocabulary, dueForQuiz, updateDueForQuiz } = useAppStore();
   const [captureInput, setCaptureInput] = useState("");
   const router = useRouter();
+
+  // Green Room states
+  const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
+  const [previewWord, setPreviewWord] = useState<import("@/lib/types").Vocabulary | null>(null);
+
+  // Check for due words on mount
+  useEffect(() => {
+    updateDueForQuiz();
+  }, [vocabularyList, updateDueForQuiz]);
 
   // Use data from props
   const wordsToReview = wordsToReviewCount;
@@ -269,16 +280,90 @@ function MissionDashboard({
 
   const handleDeleteWord = (id: string) => {
     removeVocabulary(id);
+    setSelectedWords((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedWords((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedWords.size === todayWords.length) {
+      setSelectedWords(new Set());
+    } else {
+      setSelectedWords(new Set(todayWords.map((w) => w.id)));
+    }
   };
 
   const handlePushToStory = () => {
-    if (todayWords.length === 0) return;
-    pushWordsToStory(todayWords);
+    const wordsToPush = selectedWords.size > 0
+      ? todayWords.filter((w) => selectedWords.has(w.id))
+      : todayWords;
+    if (wordsToPush.length === 0) return;
+    pushWordsToStory(wordsToPush);
+    setSelectedWords(new Set());
     router.push("/review");
   };
 
   return (
     <div className="space-y-4">
+      {/* Mandatory Quiz Alert */}
+      {dueForQuiz.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 bg-danger-red/10 border border-danger-red/30 rounded-xl"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-danger-red/20 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-danger-red" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-danger-red mb-1">
+                {dueForQuiz.length} Words Need Review!
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                These words are due for spaced repetition review
+              </p>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {dueForQuiz.slice(0, 5).map((w) => (
+                  <span key={w.id} className="px-2 py-0.5 text-[10px] bg-danger-red/10 text-danger-red rounded-full">
+                    {w.word}
+                  </span>
+                ))}
+                {dueForQuiz.length > 5 && (
+                  <span className="px-2 py-0.5 text-[10px] bg-secondary text-muted-foreground rounded-full">
+                    +{dueForQuiz.length - 5} more
+                  </span>
+                )}
+              </div>
+              <motion.button
+                type="button"
+                onClick={() => router.push('/quiz')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-danger-red text-white text-sm font-bold rounded-xl shadow-lg shadow-danger-red/30"
+              >
+                <Zap className="w-4 h-4" />
+                Start Quiz Now
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Quick Capture Bar */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-electric-purple/20 to-transparent rounded-xl blur-xl" />
@@ -300,53 +385,194 @@ function MissionDashboard({
 
       {/* Green Room - Today's New Words */}
       {todayWords.length > 0 && (
-        <div className="p-4 bg-card border border-border rounded-xl">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <h3 className="text-sm font-semibold text-foreground">
-                Green Room
-              </h3>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-xl border border-green-500/30 bg-gradient-to-br from-green-950/50 via-card to-card"
+        >
+          {/* Backstage curtain effect */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500/50 via-green-400 to-green-500/50" />
+          <div className="absolute -top-20 -left-20 w-40 h-40 bg-green-500/10 rounded-full blur-3xl" />
+
+          <div className="relative p-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-lg shadow-green-500/50"
+                />
+                <h3 className="text-sm font-bold text-green-400 tracking-wide">
+                  GREEN ROOM
+                </h3>
+                <span className="text-[10px] text-green-500/60 uppercase">Backstage</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                className="text-xs text-green-400/70 hover:text-green-400 transition-colors"
+              >
+                {selectedWords.size === todayWords.length ? "Deselect All" : "Select All"}
+              </button>
             </div>
-            <span className="text-xs text-muted-foreground">
-              {todayWords.length} new today
-            </span>
-          </div>
-          <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
-            <div
-              className="grid grid-rows-3 grid-flow-col gap-2"
-              style={{ width: 'max-content' }}
-            >
-              {todayWords.map((word) => (
-                <span
-                  key={word.id}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-full text-xs font-medium text-green-400 whitespace-nowrap"
-                >
-                  {word.word}
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteWord(word.id)}
-                    className="w-3.5 h-3.5 rounded-full bg-green-500/20 hover:bg-red-500/30 flex items-center justify-center transition-colors"
-                  >
-                    <X className="w-2.5 h-2.5 text-green-400 hover:text-red-400" />
-                  </button>
-                </span>
-              ))}
+
+            {/* Words Grid with staggered animation */}
+            <div className="overflow-x-auto scrollbar-hide -mx-1 px-1 pb-2">
+              <div
+                className="grid grid-rows-3 grid-flow-col gap-2"
+                style={{ width: 'max-content' }}
+              >
+                {todayWords.map((word, index) => {
+                  const isSelected = selectedWords.has(word.id);
+                  return (
+                    <motion.div
+                      key={word.id}
+                      initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      transition={{ delay: index * 0.05, type: "spring", stiffness: 200 }}
+                      className={cn(
+                        "group relative inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap cursor-pointer transition-all duration-200",
+                        isSelected
+                          ? "bg-green-500/30 border-2 border-green-400 text-green-300 shadow-lg shadow-green-500/20"
+                          : "bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20"
+                      )}
+                      onClick={() => handleToggleSelect(word.id)}
+                    >
+                      {/* Selection indicator */}
+                      <motion.div
+                        initial={false}
+                        animate={{ scale: isSelected ? 1 : 0 }}
+                        className="w-3.5 h-3.5 rounded-full bg-green-400 flex items-center justify-center"
+                      >
+                        <Check className="w-2.5 h-2.5 text-green-950" />
+                      </motion.div>
+
+                      {/* Word text */}
+                      <span
+                        className="font-semibold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewWord(word);
+                        }}
+                      >
+                        {word.word}
+                      </span>
+
+                      {/* Delete button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteWord(word.id);
+                        }}
+                        className="w-4 h-4 rounded-full bg-green-500/20 hover:bg-red-500/40 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="w-2.5 h-2.5 text-green-400 hover:text-red-400" />
+                      </button>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Selection count & Push Button */}
+            <div className="flex items-center gap-3 mt-3">
+              <span className="text-xs text-green-500/70">
+                {selectedWords.size > 0
+                  ? `${selectedWords.size} selected`
+                  : `${todayWords.length} words ready`}
+              </span>
+              <motion.button
+                type="button"
+                onClick={handlePushToStory}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-500/20 hover:bg-green-500/30 border border-green-400/50 text-green-400 text-sm font-bold rounded-xl transition-all shadow-lg shadow-green-500/10"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                {selectedWords.size > 0 ? `Push ${selectedWords.size} to Story` : "Push All to Story"}
+              </motion.button>
             </div>
           </div>
-          {/* Push to Story Button */}
-          <motion.button
-            type="button"
-            onClick={handlePushToStory}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 bg-electric-purple/20 hover:bg-electric-purple/30 border border-electric-purple/40 text-electric-purple text-sm font-semibold rounded-xl transition-colors"
-          >
-            <Play className="w-4 h-4 fill-current" />
-            Push to Story
-          </motion.button>
-        </div>
+        </motion.div>
       )}
+
+      {/* Word Preview Modal */}
+      <AnimatePresence>
+        {previewWord && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setPreviewWord(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-card border border-green-500/30 rounded-2xl overflow-hidden shadow-2xl shadow-green-500/20"
+            >
+              {/* Spotlight effect */}
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-32 h-32 bg-green-500/20 rounded-full blur-3xl" />
+
+              <div className="relative p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <div className="text-xs text-green-500 font-medium uppercase tracking-wider mb-1">
+                      Preview
+                    </div>
+                    <h2 className="font-serif text-2xl font-bold text-foreground">
+                      {previewWord.word}
+                    </h2>
+                    <span className="text-xs text-muted-foreground">
+                      {previewWord.part_of_speech}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setPreviewWord(null)}
+                    className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  {previewWord.definition}
+                </p>
+
+                {previewWord.example_sentence && (
+                  <div className="p-3 bg-secondary/50 rounded-lg border-l-2 border-green-500 mb-4">
+                    <p className="text-xs text-foreground/80 italic">
+                      "{previewWord.example_sentence}"
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedWords((prev) => new Set([...prev, previewWord.id]));
+                      setPreviewWord(null);
+                    }}
+                    className="flex-1 py-2.5 bg-green-500/20 text-green-400 text-sm font-semibold rounded-xl hover:bg-green-500/30 transition-colors"
+                  >
+                    Select for Story
+                  </button>
+                  <button
+                    onClick={() => setPreviewWord(null)}
+                    className="px-4 py-2.5 bg-secondary text-muted-foreground text-sm font-medium rounded-xl hover:text-foreground transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bento Grid */}
       <div className="space-y-3">
@@ -355,6 +581,7 @@ function MissionDashboard({
           <motion.div
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
+            onClick={() => router.push('/review')}
             className="relative overflow-hidden rounded-2xl cursor-pointer group"
           >
             {/* Background Image */}
@@ -362,35 +589,61 @@ function MissionDashboard({
               <img
                 src="/images/ceo-drama.jpg"
                 alt="The CEO's Secret drama scene"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/40" />
+              {/* Cinematic gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+              {/* Film vignette effect */}
+              <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]" />
+              {/* Animated light sweep */}
+              <motion.div
+                initial={{ x: "-100%", opacity: 0 }}
+                animate={{ x: "200%", opacity: [0, 0.3, 0] }}
+                transition={{ duration: 3, repeat: Infinity, repeatDelay: 5 }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12"
+              />
             </div>
 
+            {/* Film grain overlay */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNhKSIvPjwvc3ZnPg==')]" />
+
             {/* Content */}
-            <div className="relative p-5 min-h-[200px] flex flex-col justify-end">
+            <div className="relative p-5 min-h-[220px] flex flex-col justify-end">
+              {/* Top badge */}
+              <div className="absolute top-4 left-4 flex items-center gap-2">
+                <span className="px-2.5 py-1 bg-danger-red/90 backdrop-blur-sm rounded-md text-[10px] font-bold text-white uppercase tracking-wider shadow-lg">
+                  Now Playing
+                </span>
+              </div>
+
               <div className="mb-1 flex items-center gap-2">
                 <span className="text-xs font-medium text-danger-red uppercase tracking-wider">
-                  {wordsToReview} Words Due
+                  {storyVocabulary.length} Words in Story
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-danger-red animate-pulse" />
+                <motion.span
+                  animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="w-1.5 h-1.5 rounded-full bg-danger-red"
+                />
               </div>
-              <h2 className="font-serif text-2xl font-bold text-white mb-2 text-balance">
+              <h2 className="font-serif text-2xl font-bold text-white mb-2 text-balance drop-shadow-lg">
                 {"The CEO's Secret"}
               </h2>
 
               {/* Progress */}
               <div className="mb-4">
                 <div className="flex items-center justify-between text-xs text-white/70 mb-2">
-                  <span>Words Learned</span>
-                  <span className="text-luxury-gold font-medium">8/12</span>
+                  <span>Episode Progress</span>
+                  <span className="text-luxury-gold font-medium">
+                    {Math.round((storyVocabulary.filter(w => w.mastery_level > 50).length / Math.max(storyVocabulary.length, 1)) * 100)}%
+                  </span>
                 </div>
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: "66%" }}
+                    animate={{ width: `${Math.round((storyVocabulary.filter(w => w.mastery_level > 50).length / Math.max(storyVocabulary.length, 1)) * 100)}%` }}
                     transition={{ duration: 1, delay: 0.3 }}
-                    className="h-full bg-gradient-to-r from-luxury-gold to-luxury-gold/70 rounded-full"
+                    className="h-full bg-gradient-to-r from-luxury-gold to-danger-red rounded-full shadow-lg shadow-luxury-gold/30"
                   />
                 </div>
               </div>
@@ -398,10 +651,13 @@ function MissionDashboard({
               {/* CTA Button */}
               <motion.button
                 type="button"
-                onClick={() => router.push('/review')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push('/review');
+                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-danger-red text-white font-semibold rounded-xl shadow-lg shadow-danger-red/30 transition-all duration-200 group-hover:shadow-danger-red/50"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-danger-red text-white font-semibold rounded-xl shadow-lg shadow-danger-red/40 transition-all duration-200 group-hover:shadow-danger-red/60"
               >
                 <Play className="w-4 h-4 fill-current" />
                 Continue Script
@@ -409,33 +665,102 @@ function MissionDashboard({
             </div>
           </motion.div>
         ) : (
-          /* Empty State - No Words to Review */
+          /* Empty State - First Time Experience */
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-2xl bg-card border border-border p-6"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card via-card to-electric-purple/5 border border-border p-6"
           >
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-luxury-gold/10 flex items-center justify-center mb-4">
-                <Flame className="w-8 h-8 text-luxury-gold" />
-              </div>
-              <h3 className="font-serif text-xl font-bold text-foreground mb-2">
-                All Caught Up!
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4 max-w-[240px]">
-                No words due for review. Start a new drama to discover more
-                vocabulary.
-              </p>
-              <motion.button
-                type="button"
-                onClick={() => router.push('/review')}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-2 py-2.5 px-5 bg-electric-purple text-white text-sm font-semibold rounded-xl shadow-lg shadow-electric-purple/30"
+            {/* Ambient light */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-electric-purple/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-danger-red/10 rounded-full blur-3xl" />
+
+            <div className="relative flex flex-col items-center text-center">
+              {/* Animated stage curtain icon */}
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                className="w-16 h-16 rounded-full bg-electric-purple/15 flex items-center justify-center mb-4 ring-2 ring-electric-purple/20"
               >
-                <BookOpen className="w-4 h-4" />
-                Browse Dramas
-              </motion.button>
+                <span className="text-3xl">🎭</span>
+              </motion.div>
+
+              <h3 className="font-serif text-xl font-bold text-foreground mb-2">
+                Your Stage Awaits
+              </h3>
+              <p className="text-sm text-muted-foreground mb-5 max-w-[260px]">
+                Add words above, then push them to a drama story. Learn vocabulary through addictive stories!
+              </p>
+
+              {/* Quick Start Word Packs */}
+              <div className="w-full space-y-2 mb-5">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                  Quick Start Packs
+                </p>
+                {[
+                  { label: "Office Drama", words: ["deadline", "promotion", "negotiate", "resign", "ambitious"], icon: "💼" },
+                  { label: "Romance", words: ["jealous", "passionate", "betray", "forgive", "vulnerable"], icon: "💔" },
+                  { label: "Mystery", words: ["suspicious", "evidence", "witness", "alibi", "confession"], icon: "🔍" },
+                ].map((pack) => (
+                  <motion.button
+                    key={pack.label}
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      pack.words.forEach((word, i) => {
+                        setTimeout(() => {
+                          addVocabulary({
+                            id: `pack-${Date.now()}-${i}`,
+                            user_id: "mock",
+                            word,
+                            definition: "Tap to learn in story...",
+                            part_of_speech: "unknown",
+                            difficulty_level: 2,
+                            emotional_intensity: "social",
+                            tags: [pack.label.toLowerCase()],
+                            next_review_date: new Date().toISOString(),
+                            review_count: 0,
+                            mastery_level: 0,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                          });
+                        }, i * 100);
+                      });
+                    }}
+                    className="w-full flex items-center gap-3 p-3 bg-secondary/50 hover:bg-secondary border border-border hover:border-electric-purple/30 rounded-xl transition-all"
+                  >
+                    <span className="text-xl">{pack.icon}</span>
+                    <div className="flex-1 text-left">
+                      <div className="text-sm font-medium text-foreground">{pack.label}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">
+                        {pack.words.join(" · ")}
+                      </div>
+                    </div>
+                    <Plus className="w-4 h-4 text-electric-purple" />
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* Steps guide */}
+              <div className="w-full grid grid-cols-3 gap-2 text-center">
+                {[
+                  { step: "1", label: "Add Words", icon: "✍️" },
+                  { step: "2", label: "Push to Story", icon: "🎬" },
+                  { step: "3", label: "Learn & Quiz", icon: "⚡" },
+                ].map((s, i) => (
+                  <motion.div
+                    key={s.step}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + i * 0.15 }}
+                    className="p-2"
+                  >
+                    <div className="text-lg mb-1">{s.icon}</div>
+                    <div className="text-[10px] font-semibold text-foreground">{s.label}</div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}

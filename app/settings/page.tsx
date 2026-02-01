@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, User } from 'lucide-react'
+import { ArrowLeft, User, Sun, Moon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { userSettings, setUserSettings, interfaceLanguage, setInterfaceLanguage } = useAppStore()
+  const { userSettings, setUserSettings, interfaceLanguage, setInterfaceLanguage, theme, setTheme } = useAppStore()
 
   const [cefrLevel, setCefrLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1'>(userSettings?.english_level || 'B1')
   const [definitionStyle, setDefinitionStyle] = useState<'english' | 'native'>('english')
@@ -31,11 +31,11 @@ export default function SettingsPage() {
   const handleReset = () => {
     if (confirm('Reset all data?')) {
       setInterfaceLanguage('en')
+      setTheme('dark')
       setCefrLevel('B1')
       setDefinitionStyle('english')
       setPerspective('neutral')
       setWordsPerReview(5)
-      // Also update store settings
       if (userSettings) {
         setUserSettings({
           ...userSettings,
@@ -110,6 +110,46 @@ export default function SettingsPage() {
                   )}
                 >
                   中文
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Theme */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="p-4 bg-card border border-border rounded-xl"
+            >
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Theme
+              </h3>
+              <div className="flex gap-2 p-1 bg-secondary rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setTheme('dark')}
+                  className={cn(
+                    'flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2',
+                    theme === 'dark'
+                      ? 'bg-card text-foreground shadow-md'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Moon className="w-4 h-4" />
+                  Dark
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme('light')}
+                  className={cn(
+                    'flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2',
+                    theme === 'light'
+                      ? 'bg-card text-foreground shadow-md'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Sun className="w-4 h-4" />
+                  Light
                 </button>
               </div>
             </motion.div>

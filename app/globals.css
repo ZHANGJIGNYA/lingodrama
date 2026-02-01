@@ -67,6 +67,56 @@
   --sidebar-ring: #9D00FF;
 }
 
+/* Light Theme */
+.light {
+  --background: #fafafa;
+  --foreground: #171717;
+
+  --card: #ffffff;
+  --card-foreground: #171717;
+
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+
+  --primary: #E50914;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f5f5f5;
+  --secondary-foreground: #262626;
+
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+
+  --accent: #9D00FF;
+  --accent-foreground: #ffffff;
+
+  --destructive: #E50914;
+  --destructive-foreground: #ffffff;
+
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #9D00FF;
+
+  --danger-red: #E50914;
+  --luxury-gold: #D4A800;
+  --electric-purple: #9D00FF;
+
+  --chart-1: #E50914;
+  --chart-2: #D4A800;
+  --chart-3: #9D00FF;
+  --chart-4: #a3a3a3;
+  --chart-5: #d4d4d4;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #E50914;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #9D00FF;
+}
+
 @theme inline {
   --font-sans: 'Inter', 'Inter Fallback', sans-serif;
   --font-serif: 'Playfair Display', 'Playfair Display Fallback', serif;

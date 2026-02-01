@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { BottomNav } from '@/components/BottomNav'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -35,12 +36,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
-        <main className="min-h-screen pb-24">
-          {children}
-        </main>
-        <BottomNav />
+        <ThemeProvider>
+          <main className="min-h-screen pb-24">
+            {children}
+          </main>
+          <BottomNav />
+        </ThemeProvider>
       </body>
     </html>
   )
