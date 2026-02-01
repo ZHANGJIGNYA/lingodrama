@@ -22,9 +22,13 @@ import {
   TrendingUp,
   Settings,
   User,
+  Plus,
+  Loader2,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { useAppStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
 // Navigation tabs
 const tabs = [
@@ -53,127 +57,72 @@ const sourceData = [
   { source: "Other", count: 6, color: "#737373" },
 ];
 
-// Extended vocabulary data
-const vocabularyItems = [
-  {
-    id: 1,
-    word: "Treacherous",
-    pos: "Adjective",
-    posShort: "Adj",
-    phonetic: "/ˈtretʃərəs/",
-    definition: "Guilty of betrayal or deception",
-    fullDefinition: "Guilty of or involving betrayal or deception; hazardous because of presenting hidden or unpredictable dangers.",
-    scene: "/images/scene-betrayal.jpg",
-    episode: "Ep. 3 - The Betrayal",
-    source: "The CEO's Secret",
-    cefr: "B2",
-    examples: [
-      "The treacherous road conditions made driving dangerous.",
-      "She discovered his treacherous plot against the company.",
-    ],
-    synonyms: ["disloyal", "unfaithful", "deceitful", "perfidious"],
-    antonyms: ["loyal", "faithful", "trustworthy"],
-    timesReviewed: 5,
-    lastReviewed: "2 days ago",
-    mastery: 75,
-  },
-  {
-    id: 2,
-    word: "Ruthless",
-    pos: "Adjective",
-    posShort: "Adj",
-    phonetic: "/ˈruːθləs/",
-    definition: "Having no pity or compassion",
-    fullDefinition: "Having or showing no pity or compassion for others; cruel and determined to succeed.",
-    scene: "/images/scene-power.jpg",
-    episode: "Ep. 1 - The Takeover",
-    source: "The CEO's Secret",
-    cefr: "B2",
-    examples: [
-      "He was ruthless in his pursuit of power.",
-      "The ruthless CEO fired half the staff.",
-    ],
-    synonyms: ["merciless", "cruel", "heartless", "brutal"],
-    antonyms: ["merciful", "compassionate", "kind"],
-    timesReviewed: 8,
-    lastReviewed: "1 day ago",
-    mastery: 90,
-  },
-  {
-    id: 3,
-    word: "Inevitable",
-    pos: "Adjective",
-    posShort: "Adj",
-    phonetic: "/ɪnˈevɪtəbl/",
-    definition: "Certain to happen; unavoidable",
-    fullDefinition: "Certain to happen; unavoidable. So frequently experienced or seen that it is completely predictable.",
-    scene: "/images/scene-confrontation.jpg",
-    episode: "Ep. 5 - The Confrontation",
-    source: "The CEO's Secret",
-    cefr: "B1",
-    examples: [
-      "Their confrontation was inevitable.",
-      "Change is inevitable in any growing company.",
-    ],
-    synonyms: ["unavoidable", "inescapable", "certain", "sure"],
-    antonyms: ["avoidable", "uncertain", "preventable"],
-    timesReviewed: 3,
-    lastReviewed: "5 days ago",
-    mastery: 60,
-  },
-  {
-    id: 4,
-    word: "Leverage",
-    pos: "Noun",
-    posShort: "N",
-    phonetic: "/ˈlevərɪdʒ/",
-    definition: "Power to influence or act",
-    fullDefinition: "The power to influence a person or situation to achieve a particular outcome; advantage gained from a position of strength.",
-    scene: "/images/scene-power.jpg",
-    episode: "Ep. 2 - Power Play",
-    source: "The CEO's Secret",
-    cefr: "C1",
-    examples: [
-      "She used her connections as leverage in the negotiation.",
-      "Having inside information gave him leverage.",
-    ],
-    synonyms: ["influence", "power", "advantage", "clout"],
-    antonyms: ["weakness", "disadvantage"],
-    timesReviewed: 2,
-    lastReviewed: "1 week ago",
-    mastery: 45,
-  },
-  {
-    id: 5,
-    word: "Clandestine",
-    pos: "Adjective",
-    posShort: "Adj",
-    phonetic: "/klænˈdestɪn/",
-    definition: "Kept secret or hidden",
-    fullDefinition: "Kept secret or done secretively, especially because illicit or improper.",
-    scene: "/images/scene-betrayal.jpg",
-    episode: "Ep. 4 - Hidden Agenda",
-    source: "The CEO's Secret",
-    cefr: "C1",
-    examples: [
-      "They held clandestine meetings after midnight.",
-      "The clandestine affair was finally exposed.",
-    ],
-    synonyms: ["secret", "covert", "furtive", "surreptitious"],
-    antonyms: ["open", "public", "overt"],
-    timesReviewed: 1,
-    lastReviewed: "Today",
-    mastery: 30,
-  },
-];
+// Display item type for vocabulary list
+interface DisplayVocabItem {
+  id: number;
+  word: string;
+  pos: string;
+  posShort: string;
+  phonetic: string;
+  definition: string;
+  fullDefinition: string;
+  scene: string;
+  episode: string;
+  source: string;
+  cefr: string;
+  examples: string[];
+  synonyms: string[];
+  antonyms: string[];
+  timesReviewed: number;
+  lastReviewed: string;
+  mastery: number;
+}
 
 export default function LingoDramaPage() {
   const [activeTab, setActiveTab] = useState("mission");
   const [redactedRevealed, setRedactedRevealed] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
 
-  // Mock streak data
-  const currentStreak = 12;
+  // Get data from store
+  const { vocabularyList, setVocabularyList, wordsToReview, userStats } =
+    useAppStore();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [wordInput, setWordInput] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddWords = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!wordInput.trim()) return;
+    setIsAdding(true);
+    setTimeout(() => {
+      const words = wordInput
+        .split(/[,，\s]+/)
+        .map((w) => w.trim())
+        .filter((w) => w.length > 0);
+      const newVocabs = words.map((word, i) => ({
+        id: `new-${Date.now()}-${i}`,
+        user_id: "mock",
+        word,
+        definition: "Pending AI analysis...",
+        part_of_speech: "unknown",
+        difficulty_level: 1,
+        emotional_intensity: "vibe" as const,
+        tags: ["manual"],
+        next_review_date: new Date().toISOString(),
+        review_count: 0,
+        mastery_level: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+      setVocabularyList([...newVocabs, ...vocabularyList]);
+      setWordInput("");
+      setIsAdding(false);
+      setShowAddForm(false);
+    }, 1000);
+  };
+
+  // Use store data for streak
+  const currentStreak = userStats?.current_streak_days ?? 0;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -195,9 +144,11 @@ export default function LingoDramaPage() {
                 className="flex items-center gap-1.5 px-2.5 py-1.5 bg-luxury-gold/10 border border-luxury-gold/30 rounded-full hover:bg-luxury-gold/20 transition-colors"
               >
                 <Flame className="w-4 h-4 text-luxury-gold" />
-                <span className="text-sm font-bold text-luxury-gold">{currentStreak}</span>
+                <span className="text-sm font-bold text-luxury-gold">
+                  {currentStreak}
+                </span>
               </motion.button>
-              
+
               <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
                 <span className="text-xs font-medium text-muted-foreground">
                   EN
@@ -218,7 +169,7 @@ export default function LingoDramaPage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <MissionDashboard />
+                <MissionDashboard wordsToReviewCount={wordsToReview.length} vocabularyList={vocabularyList} />
               </motion.div>
             )}
             {activeTab === "review" && (
@@ -243,7 +194,7 @@ export default function LingoDramaPage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <EvidenceVault />
+                <EvidenceVault vocabularyList={vocabularyList} />
               </motion.div>
             )}
             {activeTab === "settings" && (
@@ -264,9 +215,9 @@ export default function LingoDramaPage() {
       {/* Streak Modal */}
       <AnimatePresence>
         {showStreakModal && (
-          <StreakModalComponent 
-            streak={currentStreak} 
-            onClose={() => setShowStreakModal(false)} 
+          <StreakModalComponent
+            streak={currentStreak}
+            onClose={() => setShowStreakModal(false)}
           />
         )}
       </AnimatePresence>
@@ -275,11 +226,57 @@ export default function LingoDramaPage() {
 }
 
 // Section 1: Mission Dashboard
-function MissionDashboard() {
-  // Simulated data - in real app this would come from backend
-  const wordsToReview = 0; // No words to review - shows empty state
-  const hasActiveScript = wordsToReview > 0;
-  
+function MissionDashboard({
+  wordsToReviewCount,
+  vocabularyList,
+}: {
+  wordsToReviewCount: number;
+  vocabularyList: import("@/lib/types").Vocabulary[];
+}) {
+  const { addVocabulary, removeVocabulary, pushWordsToStory, storyVocabulary } = useAppStore();
+  const [captureInput, setCaptureInput] = useState("");
+  const router = useRouter();
+
+  // Use data from props
+  const wordsToReview = wordsToReviewCount;
+  const hasActiveScript = storyVocabulary.length > 0;
+
+  // Filter words collected today
+  const today = new Date().toDateString();
+  const todayWords = vocabularyList.filter(
+    (v) => new Date(v.created_at).toDateString() === today
+  );
+
+  const handleCapture = () => {
+    if (!captureInput.trim()) return;
+    addVocabulary({
+      id: `cap-${Date.now()}`,
+      user_id: "mock",
+      word: captureInput.trim(),
+      definition: "Pending AI analysis...",
+      part_of_speech: "unknown",
+      difficulty_level: 1,
+      emotional_intensity: "vibe",
+      tags: ["manual"],
+      next_review_date: new Date().toISOString(),
+      review_count: 0,
+      mastery_level: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    setCaptureInput("");
+  };
+
+  const handleDeleteWord = (id: string) => {
+    removeVocabulary(id);
+  };
+
+  const handlePushToStory = () => {
+    if (todayWords.length === 0) return;
+    pushWordsToStory(todayWords);
+    router.push("/review");
+  };
+
   return (
     <div className="space-y-4">
       {/* Quick Capture Bar */}
@@ -289,12 +286,67 @@ function MissionDashboard() {
           <Lock className="w-4 h-4 text-electric-purple" />
           <input
             type="text"
+            value={captureInput}
+            onChange={(e) => setCaptureInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleCapture()}
             placeholder="Type new word to encrypt..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
-          <Search className="w-4 h-4 text-muted-foreground" />
+          <button type="button" onClick={handleCapture}>
+            <Search className="w-4 h-4 text-muted-foreground hover:text-electric-purple transition-colors" />
+          </button>
         </div>
       </div>
+
+      {/* Green Room - Today's New Words */}
+      {todayWords.length > 0 && (
+        <div className="p-4 bg-card border border-border rounded-xl">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <h3 className="text-sm font-semibold text-foreground">
+                Green Room
+              </h3>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {todayWords.length} new today
+            </span>
+          </div>
+          <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+            <div
+              className="grid grid-rows-3 grid-flow-col gap-2"
+              style={{ width: 'max-content' }}
+            >
+              {todayWords.map((word) => (
+                <span
+                  key={word.id}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-full text-xs font-medium text-green-400 whitespace-nowrap"
+                >
+                  {word.word}
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteWord(word.id)}
+                    className="w-3.5 h-3.5 rounded-full bg-green-500/20 hover:bg-red-500/30 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-2.5 h-2.5 text-green-400 hover:text-red-400" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+          {/* Push to Story Button */}
+          <motion.button
+            type="button"
+            onClick={handlePushToStory}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 bg-electric-purple/20 hover:bg-electric-purple/30 border border-electric-purple/40 text-electric-purple text-sm font-semibold rounded-xl transition-colors"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            Push to Story
+          </motion.button>
+        </div>
+      )}
 
       {/* Bento Grid */}
       <div className="space-y-3">
@@ -346,6 +398,7 @@ function MissionDashboard() {
               {/* CTA Button */}
               <motion.button
                 type="button"
+                onClick={() => router.push('/review')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-danger-red text-white font-semibold rounded-xl shadow-lg shadow-danger-red/30 transition-all duration-200 group-hover:shadow-danger-red/50"
@@ -370,10 +423,12 @@ function MissionDashboard() {
                 All Caught Up!
               </h3>
               <p className="text-sm text-muted-foreground mb-4 max-w-[240px]">
-                No words due for review. Start a new drama to discover more vocabulary.
+                No words due for review. Start a new drama to discover more
+                vocabulary.
               </p>
               <motion.button
                 type="button"
+                onClick={() => router.push('/review')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="flex items-center gap-2 py-2.5 px-5 bg-electric-purple text-white text-sm font-semibold rounded-xl shadow-lg shadow-electric-purple/30"
@@ -387,10 +442,11 @@ function MissionDashboard() {
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Inbox Card */}
+          {/* New Clues Card - Links to Vault */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => router.push('/vault')}
             className="relative overflow-hidden rounded-xl p-4 bg-card border border-border cursor-pointer group"
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-electric-purple/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
@@ -398,30 +454,32 @@ function MissionDashboard() {
               <div className="w-10 h-10 rounded-lg bg-electric-purple/10 flex items-center justify-center mb-3 group-hover:bg-electric-purple/20 transition-colors">
                 <Inbox className="w-5 h-5 text-electric-purple" />
               </div>
-              <div className="text-3xl font-bold text-foreground mb-0.5">12</div>
-              <div className="text-sm text-muted-foreground">New Clues</div>
+              <div className="text-3xl font-bold text-foreground mb-0.5">
+                {vocabularyList.length}
+              </div>
+              <div className="text-sm text-muted-foreground">My Words</div>
             </div>
             <div className="absolute bottom-2 right-2">
               <ChevronRight className="w-4 h-4 text-electric-purple/50" />
             </div>
           </motion.div>
 
-          {/* Streak Card */}
+          {/* Quiz Card - Links to Quiz */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => router.push('/quiz')}
             className="relative overflow-hidden rounded-xl p-4 bg-card border border-border cursor-pointer group"
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-luxury-gold/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative">
               <div className="w-10 h-10 rounded-lg bg-luxury-gold/10 flex items-center justify-center mb-3 group-hover:bg-luxury-gold/20 transition-colors">
-                <Flame className="w-5 h-5 text-luxury-gold" />
+                <Zap className="w-5 h-5 text-luxury-gold" />
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-foreground">12</span>
-                <span className="text-sm text-muted-foreground">Days</span>
+              <div className="text-lg font-bold text-foreground mb-0.5">
+                Speed Quiz
               </div>
-              <div className="text-sm text-muted-foreground">Streak</div>
+              <div className="text-sm text-muted-foreground">Test yourself</div>
             </div>
             <div className="absolute bottom-2 right-2">
               <ChevronRight className="w-4 h-4 text-luxury-gold/50" />
@@ -430,40 +488,46 @@ function MissionDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="p-4 bg-card border border-border rounded-xl">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">
-            Recent Episodes
-          </h3>
-          <div className="space-y-2">
-            {["Ep. 5 - The Confrontation", "Ep. 4 - Hidden Agenda"].map(
-              (ep, i) => (
+        {storyVocabulary.length > 0 && (
+          <div className="p-4 bg-card border border-border rounded-xl">
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">
+              Story Words
+            </h3>
+            <div className="space-y-2">
+              {storyVocabulary.slice(0, 5).map((word, i) => (
                 <div
-                  key={ep}
+                  key={word.id}
                   className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
                 >
-                  <span className="text-sm text-foreground">{ep}</span>
+                  <span className="text-sm text-foreground">{word.word}</span>
                   <span
                     className={cn(
                       "text-xs font-medium px-2 py-0.5 rounded-full",
-                      i === 0
-                        ? "bg-danger-red/10 text-danger-red"
-                        : "bg-luxury-gold/10 text-luxury-gold"
+                      word.mastery_level > 50
+                        ? "bg-luxury-gold/10 text-luxury-gold"
+                        : "bg-electric-purple/10 text-electric-purple",
                     )}
                   >
-                    {i === 0 ? "3 left" : "Complete"}
+                    {word.mastery_level > 50 ? "Learned" : "In Story"}
                   </span>
                 </div>
-              )
-            )}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
 // Streak Modal Component
-function StreakModalComponent({ streak, onClose }: { streak: number; onClose: () => void }) {
+function StreakModalComponent({
+  streak,
+  onClose,
+}: {
+  streak: number;
+  onClose: () => void;
+}) {
   // Generate mock data for the last 12 weeks (84 days)
   const generateHeatmapData = () => {
     const data = [];
@@ -475,9 +539,15 @@ function StreakModalComponent({ streak, onClose }: { streak: number; onClose: ()
       const hasActivity = i < streak;
       data.push({
         date,
-        collected: hasActivity ? Math.floor(Math.random() * 7) + 1 : Math.floor(Math.random() * 3),
-        reviewed: hasActivity ? Math.floor(Math.random() * 12) + 2 : Math.floor(Math.random() * 5),
-        tested: hasActivity ? Math.floor(Math.random() * 8) + 1 : Math.floor(Math.random() * 3),
+        collected: hasActivity
+          ? Math.floor(Math.random() * 7) + 1
+          : Math.floor(Math.random() * 3),
+        reviewed: hasActivity
+          ? Math.floor(Math.random() * 12) + 2
+          : Math.floor(Math.random() * 5),
+        tested: hasActivity
+          ? Math.floor(Math.random() * 8) + 1
+          : Math.floor(Math.random() * 3),
       });
     }
     return data;
@@ -490,7 +560,11 @@ function StreakModalComponent({ streak, onClose }: { streak: number; onClose: ()
   }
 
   // Get intensity level (0-4) based on total activity
-  const getIntensity = (day: { collected: number; reviewed: number; tested: number }) => {
+  const getIntensity = (day: {
+    collected: number;
+    reviewed: number;
+    tested: number;
+  }) => {
     const total = day.collected + day.reviewed + day.tested;
     if (total === 0) return 0;
     if (total <= 5) return 1;
@@ -520,7 +594,7 @@ function StreakModalComponent({ streak, onClose }: { streak: number; onClose: ()
       reviewed: acc.reviewed + day.reviewed,
       tested: acc.tested + day.tested,
     }),
-    { collected: 0, reviewed: 0, tested: 0 }
+    { collected: 0, reviewed: 0, tested: 0 },
   );
 
   return (
@@ -548,8 +622,12 @@ function StreakModalComponent({ streak, onClose }: { streak: number; onClose: ()
               </div>
               <div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-luxury-gold">{streak}</span>
-                  <span className="text-sm text-muted-foreground">day streak</span>
+                  <span className="text-3xl font-bold text-luxury-gold">
+                    {streak}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    day streak
+                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground">Keep it going!</p>
               </div>
@@ -606,7 +684,7 @@ function StreakModalComponent({ streak, onClose }: { streak: number; onClose: ()
                       transition={{ delay: (weekIndex * 7 + dayIndex) * 0.003 }}
                       className={cn(
                         "w-3 h-3 rounded-sm cursor-pointer hover:ring-1 hover:ring-foreground/30 transition-all",
-                        intensityColors[getIntensity(day)]
+                        intensityColors[getIntensity(day)],
                       )}
                       title={`${day.date.toLocaleDateString()}: ${day.collected} collected, ${day.reviewed} reviewed, ${day.tested} tested`}
                     />
@@ -626,21 +704,27 @@ function StreakModalComponent({ streak, onClose }: { streak: number; onClose: ()
                 <div className="w-8 h-8 rounded-full bg-electric-purple/20 flex items-center justify-center mx-auto mb-1">
                   <div className="w-2.5 h-2.5 rounded-full bg-electric-purple" />
                 </div>
-                <span className="text-lg font-bold text-foreground">{todayStats.collected}</span>
+                <span className="text-lg font-bold text-foreground">
+                  {todayStats.collected}
+                </span>
                 <p className="text-[10px] text-muted-foreground">collected</p>
               </div>
               <div className="text-center">
                 <div className="w-8 h-8 rounded-full bg-luxury-gold/20 flex items-center justify-center mx-auto mb-1">
                   <div className="w-2.5 h-2.5 rounded-full bg-luxury-gold" />
                 </div>
-                <span className="text-lg font-bold text-foreground">{todayStats.reviewed}</span>
+                <span className="text-lg font-bold text-foreground">
+                  {todayStats.reviewed}
+                </span>
                 <p className="text-[10px] text-muted-foreground">reviewed</p>
               </div>
               <div className="text-center">
                 <div className="w-8 h-8 rounded-full bg-danger-red/20 flex items-center justify-center mx-auto mb-1">
                   <div className="w-2.5 h-2.5 rounded-full bg-danger-red" />
                 </div>
-                <span className="text-lg font-bold text-foreground">{todayStats.tested}</span>
+                <span className="text-lg font-bold text-foreground">
+                  {todayStats.tested}
+                </span>
                 <p className="text-[10px] text-muted-foreground">tested</p>
               </div>
             </div>
@@ -649,15 +733,25 @@ function StreakModalComponent({ streak, onClose }: { streak: number; onClose: ()
           {/* Total Stats */}
           <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border">
             <div className="text-center">
-              <span className="text-xl font-bold text-electric-purple">{totals.collected}</span>
-              <p className="text-[10px] text-muted-foreground">Total Collected</p>
+              <span className="text-xl font-bold text-electric-purple">
+                {totals.collected}
+              </span>
+              <p className="text-[10px] text-muted-foreground">
+                Total Collected
+              </p>
             </div>
             <div className="text-center">
-              <span className="text-xl font-bold text-luxury-gold">{totals.reviewed}</span>
-              <p className="text-[10px] text-muted-foreground">Total Reviewed</p>
+              <span className="text-xl font-bold text-luxury-gold">
+                {totals.reviewed}
+              </span>
+              <p className="text-[10px] text-muted-foreground">
+                Total Reviewed
+              </p>
             </div>
             <div className="text-center">
-              <span className="text-xl font-bold text-danger-red">{totals.tested}</span>
+              <span className="text-xl font-bold text-danger-red">
+                {totals.tested}
+              </span>
               <p className="text-[10px] text-muted-foreground">Total Tested</p>
             </div>
           </div>
@@ -750,7 +844,7 @@ function ImmersiveReview({
                     "inline-flex items-center gap-1 px-2 py-0.5 rounded mx-1 transition-all duration-300",
                     redactedRevealed
                       ? "bg-danger-red/20 text-danger-red border border-danger-red/30"
-                      : "bg-black text-transparent hover:bg-black/80 cursor-pointer"
+                      : "bg-black text-transparent hover:bg-black/80 cursor-pointer",
                   )}
                 >
                   {redactedRevealed ? (
@@ -839,7 +933,7 @@ function ImmersiveReview({
               key={i}
               className={cn(
                 "w-6 h-1 rounded-full transition-colors",
-                i <= 3 ? "bg-danger-red" : "bg-secondary"
+                i <= 3 ? "bg-danger-red" : "bg-secondary",
               )}
             />
           ))}
@@ -961,7 +1055,7 @@ function WordDetailModal({
   word,
   onClose,
 }: {
-  word: (typeof vocabularyItems)[0];
+  word: DisplayVocabItem;
   onClose: () => void;
 }) {
   return (
@@ -1151,9 +1245,34 @@ function WordDetailModal({
 }
 
 // Section 3: Words Collection (Vocabulary List)
-function EvidenceVault() {
+function EvidenceVault({
+  vocabularyList,
+}: {
+  vocabularyList: import("@/lib/types").Vocabulary[];
+}) {
+  // Transform vocabulary list to display format
+  const displayItems = vocabularyList.map((v, index) => ({
+    id: index + 1,
+    word: v.word,
+    pos: v.part_of_speech || "Unknown",
+    posShort: (v.part_of_speech || "Unk").slice(0, 3),
+    phonetic: "",
+    definition: v.definition,
+    fullDefinition: v.definition,
+    scene: "/images/scene-power.jpg",
+    episode: v.tags.includes("ceo-secret") ? "The CEO's Secret" : "Drama",
+    source: "The CEO's Secret",
+    cefr: getLevelFromDifficulty(v.difficulty_level),
+    examples: v.example_sentence ? [v.example_sentence] : [],
+    synonyms: [] as string[],
+    antonyms: [] as string[],
+    timesReviewed: v.review_count,
+    lastReviewed: "Recently",
+    mastery: v.mastery_level,
+  }));
+
   const [selectedWord, setSelectedWord] = useState<
-    (typeof vocabularyItems)[0] | null
+    (typeof displayItems)[0] | null
   >(null);
 
   return (
@@ -1165,7 +1284,7 @@ function EvidenceVault() {
             My Words
           </h2>
           <p className="text-sm text-muted-foreground">
-            {vocabularyItems.length} words collected
+            {displayItems.length} words collected
           </p>
         </div>
         <button
@@ -1189,7 +1308,7 @@ function EvidenceVault() {
 
       {/* Vocabulary List */}
       <div className="space-y-3">
-        {vocabularyItems.map((item, index) => (
+        {displayItems.map((item, index) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 20 }}
@@ -1261,12 +1380,26 @@ function EvidenceVault() {
   );
 }
 
+// Helper function to convert difficulty to CEFR level
+function getLevelFromDifficulty(difficulty: number): string {
+  if (difficulty <= 1) return "A1";
+  if (difficulty <= 2) return "A2";
+  if (difficulty <= 3) return "B1";
+  if (difficulty <= 4) return "B2";
+  if (difficulty <= 5) return "C1";
+  return "C2";
+}
+
 // Section 4: Profile Settings
 function ProfileSettingsComponent() {
   const [interfaceLanguage, setInterfaceLanguage] = useState<"en" | "zh">("en");
   const [cefrLevel, setCefrLevel] = useState<string>("B1");
-  const [definitionStyle, setDefinitionStyle] = useState<"english" | "native">("english");
-  const [perspective, setPerspective] = useState<"male" | "female" | "neutral">("neutral");
+  const [definitionStyle, setDefinitionStyle] = useState<"english" | "native">(
+    "english",
+  );
+  const [perspective, setPerspective] = useState<"male" | "female" | "neutral">(
+    "neutral",
+  );
   const [wordsPerReview, setWordsPerReview] = useState(3);
 
   const cefrLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
@@ -1301,7 +1434,7 @@ function ProfileSettingsComponent() {
               "flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200",
               interfaceLanguage === "en"
                 ? "bg-card text-foreground shadow-md"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             English
@@ -1313,7 +1446,7 @@ function ProfileSettingsComponent() {
               "flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200",
               interfaceLanguage === "zh"
                 ? "bg-card text-foreground shadow-md"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             中文
@@ -1337,7 +1470,7 @@ function ProfileSettingsComponent() {
                 "py-3 px-4 rounded-lg text-sm font-semibold transition-all duration-200 border",
                 cefrLevel === level
                   ? "bg-electric-purple text-white border-electric-purple shadow-lg shadow-electric-purple/30"
-                  : "bg-secondary text-muted-foreground border-border hover:border-electric-purple/50 hover:text-foreground"
+                  : "bg-secondary text-muted-foreground border-border hover:border-electric-purple/50 hover:text-foreground",
               )}
             >
               {level}
@@ -1361,7 +1494,7 @@ function ProfileSettingsComponent() {
                 "flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200",
                 definitionStyle === "english"
                   ? "bg-card text-foreground shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               English Sent.
@@ -1373,7 +1506,7 @@ function ProfileSettingsComponent() {
                 "flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all duration-200",
                 definitionStyle === "native"
                   ? "bg-card text-foreground shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Native Trans.
@@ -1396,7 +1529,7 @@ function ProfileSettingsComponent() {
                   "flex-1 py-2.5 px-3 rounded-md text-sm font-medium capitalize transition-all duration-200",
                   perspective === option
                     ? "bg-card text-foreground shadow-md"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {option}

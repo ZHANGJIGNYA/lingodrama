@@ -1,7 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, ArrowLeft } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type { SeriesType } from '@/lib/types'
 
 interface SeriesSelectionProps {
@@ -51,9 +52,20 @@ const seriesData: Array<{
 ]
 
 export default function SeriesSelection({ onSelectSeries }: SeriesSelectionProps) {
+  const router = useRouter()
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className="relative z-10 max-w-md mx-auto px-4 py-8">
+      <div className="relative z-10 max-w-md mx-auto px-4 py-6">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push('/')}
+          className="mb-4 p-2 hover:bg-secondary rounded-lg transition-colors inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back</span>
+        </button>
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

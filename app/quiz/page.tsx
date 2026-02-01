@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { CriticalMode } from '@/components/quiz/CriticalMode'
@@ -8,74 +8,54 @@ import { SocialMode } from '@/components/quiz/SocialMode'
 import { VibeMode } from '@/components/quiz/VibeMode'
 import ProjectorLoading from '@/components/ProjectorLoading'
 import { Play, ArrowLeft } from 'lucide-react'
-import type { QuizMode } from '@/lib/types'
+import { useAppStore } from '@/lib/store'
+import type { QuizMode, Vocabulary } from '@/lib/types'
 
-// Mock 测验数据
-const mockQuizWords: QuizMode[] = [
-  {
-    type: 'critical',
-    vocabulary: {
-      id: '1',
-      user_id: 'mock',
-      word: 'critical',
-      definition: '危急的；关键的',
-      part_of_speech: 'adjective',
-      difficulty_level: 3,
-      emotional_intensity: 'critical',
-      tags: ['medical'],
-      next_review_date: new Date().toISOString(),
-      review_count: 0,
-      mastery_level: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    options: ['危急的', '快乐的', '缓慢的', '明亮的'],
-    correctAnswer: '危急的',
-  },
-  {
-    type: 'social',
-    vocabulary: {
-      id: '2',
-      user_id: 'mock',
-      word: 'cynical',
-      definition: '愤世嫉俗的',
-      part_of_speech: 'adjective',
-      difficulty_level: 4,
-      emotional_intensity: 'social',
-      tags: ['personality'],
-      next_review_date: new Date().toISOString(),
-      review_count: 0,
-      mastery_level: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    options: ['愤世嫉俗的', '热情友好的', '天真善良的', '冷静理性的'],
-    correctAnswer: '愤世嫉俗的',
-  },
-  {
-    type: 'vibe',
-    vocabulary: {
-      id: '3',
-      user_id: 'mock',
-      word: 'vibrant',
-      definition: '充满活力的；鲜艳的',
-      part_of_speech: 'adjective',
-      difficulty_level: 3,
-      emotional_intensity: 'vibe',
-      tags: ['visual'],
-      next_review_date: new Date().toISOString(),
-      review_count: 0,
-      mastery_level: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    options: ['充满活力的', '黯淡无光的', '安静沉稳的', '模糊不清的'],
-    correctAnswer: '充满活力的',
-  },
-]
+// Generate quiz questions from vocabulary list
+function generateQuizQuestions(vocabularyList: Vocabulary[]): QuizMode[] {
+  if (vocabularyList.length === 0) return []
+
+  return vocabularyList.slice(0, 5).map((vocab) => {
+    // Determine quiz type based on emotional_intensity or default to cycling through types
+    const types: Array<'critical' | 'social' | 'vibe'> = ['critical', 'social', 'vibe']
+    const quizType = vocab.emotional_intensity || types[Math.floor(Math.random() * types.length)]
+
+    // Generate wrong options (simplified - in real app would come from AI)
+    const correctAnswer = vocab.definition.split(';')[0].trim()
+    const wrongOptions = [
+      '快乐的；高兴的',
+      '缓慢的；迟钝的',
+      '明亮的；光明的',
+      '安静的；平和的',
+      '困难的；艰难的',
+      '简单的；容易的',
+    ]
+
+    // Shuffle and pick 3 wrong options
+    const shuffledWrong = wrongOptions
+      .filter(opt => opt !== correctAnswer)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3)
+
+    // Combine and shuffle all options
+    const allOptions = [correctAnswer, ...shuffledWrong].sort(() => Math.random() - 0.5)
+
+    return {
+      type: quizType,
+      vocabulary: vocab,
+      options: allOptions,
+      correctAnswer: correctAnswer,
+    }
+  })
+}
 
 export default function QuizPage() {
   const router = useRouter()
+  const { vocabularyList, setQuizProgress } = useAppStore()
+
+  // Generate quiz questions from vocabulary
+  const quizWords = useMemo(() => generateQuizQuestions(vocabularyList), [vocabularyList])
+
   const [isStarted, setIsStarted] = useState(false)
   const [showProjector, setShowProjector] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState(0)
@@ -94,14 +74,16 @@ export default function QuizPage() {
   const handleAnswer = (isCorrect: boolean) => {
     if (isCorrect) {
       setScore(score + 1)
+      setQuizProgress(currentQuestion + 1)
 
-      if (currentQuestion < mockQuizWords.length - 1) {
+      if (currentQuestion < quizWords.length - 1) {
         setTimeout(() => {
           setCurrentQuestion(currentQuestion + 1)
         }, 1500)
       } else {
         setTimeout(() => {
           setIsComplete(true)
+          setQuizProgress(quizWords.length)
         }, 1500)
       }
     } else {
@@ -118,6 +100,30 @@ export default function QuizPage() {
     setIsComplete(false)
     setFailedAt(null)
     setIsStarted(false)
+    setQuizProgress(0)
+  }
+
+  // No words available
+  if (quizWords.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="text-6xl mb-6">📚</div>
+          <h1 className="font-serif text-2xl font-bold text-foreground mb-3">
+            No Words to Quiz
+          </h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            Add some vocabulary first to start a quiz.
+          </p>
+          <button
+            onClick={() => router.push('/')}
+            className="bg-danger-red text-white px-6 py-3 rounded-xl font-semibold"
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // 放映机加载动画
@@ -162,7 +168,7 @@ export default function QuizPage() {
 
             <div className="bg-card border border-border rounded-xl p-4 mb-8">
               <div className="text-2xl font-bold text-danger-red mb-1">
-                {mockQuizWords.length} Questions
+                {quizWords.length} Questions
               </div>
               <div className="text-xs text-muted-foreground">
                 Critical · Social · Vibe
@@ -212,7 +218,7 @@ export default function QuizPage() {
 
           <div className="bg-card border border-border rounded-xl p-6 mb-6">
             <p className="text-4xl font-bold text-foreground mb-2">
-              {score} / {mockQuizWords.length}
+              {score} / {quizWords.length}
             </p>
             <p className="text-sm text-muted-foreground">
               {isPassed
@@ -244,7 +250,7 @@ export default function QuizPage() {
   }
 
   // 渲染对应的模式组件
-  const currentQuiz = mockQuizWords[currentQuestion]
+  const currentQuiz = quizWords[currentQuestion]
 
   return (
     <div className="min-h-screen bg-background">
@@ -252,7 +258,7 @@ export default function QuizPage() {
         <CriticalMode
           quiz={currentQuiz}
           questionNumber={currentQuestion + 1}
-          totalQuestions={mockQuizWords.length}
+          totalQuestions={quizWords.length}
           onAnswer={handleAnswer}
         />
       )}
@@ -261,7 +267,7 @@ export default function QuizPage() {
         <SocialMode
           quiz={currentQuiz}
           questionNumber={currentQuestion + 1}
-          totalQuestions={mockQuizWords.length}
+          totalQuestions={quizWords.length}
           onAnswer={handleAnswer}
         />
       )}
@@ -270,7 +276,7 @@ export default function QuizPage() {
         <VibeMode
           quiz={currentQuiz}
           questionNumber={currentQuestion + 1}
-          totalQuestions={mockQuizWords.length}
+          totalQuestions={quizWords.length}
           onAnswer={handleAnswer}
         />
       )}

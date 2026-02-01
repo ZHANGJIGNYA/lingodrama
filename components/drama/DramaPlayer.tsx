@@ -16,7 +16,10 @@ interface DramaPlayerProps {
 }
 
 export default function DramaPlayer({ series, episode, onBack, onComplete }: DramaPlayerProps) {
-  const { vocabularyList } = useAppStore()
+  const { vocabularyList, storyVocabulary } = useAppStore()
+
+  // Combine vocabularyList and storyVocabulary for lookup
+  const allVocabulary = [...storyVocabulary, ...vocabularyList]
 
   const [currentMsgIndex, setCurrentMsgIndex] = useState(0)
   const [isTyping, setIsTyping] = useState(false)
@@ -38,7 +41,7 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
     episode.messages.forEach((msg) => {
       msg.vocabs.forEach((vocab, index) => {
         const key = `${msg.id}-${index}`
-        const actualVocab = vocabularyList.find(v =>
+        const actualVocab = allVocabulary.find(v =>
           v.word.toLowerCase() === vocab.word.toLowerCase()
         )
         states[key] = {
@@ -50,7 +53,7 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
       })
     })
     setWordStates(states)
-  }, [episode, vocabularyList])
+  }, [episode, allVocabulary])
 
   const handleContinue = () => {
     if (currentMsgIndex >= episode.messages.length - 1) {
@@ -98,7 +101,7 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
   // Get all unique vocabs in this episode
   const episodeVocabs = Array.from(
     new Set(episode.messages.flatMap(msg => msg.vocabs.map(v => v.word)))
-  ).map(word => vocabularyList.find(v => v.word.toLowerCase() === word.toLowerCase()))
+  ).map(word => allVocabulary.find(v => v.word.toLowerCase() === word.toLowerCase()))
     .filter(Boolean) as Vocabulary[]
 
   return (
@@ -179,7 +182,7 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
             message={message}
             isUser={message.sender === 'You'}
             wordStates={wordStates}
-            vocabularyList={vocabularyList}
+            vocabularyList={allVocabulary}
             onWordClick={handleWordClick}
             onWordReveal={handleWordReveal}
           />

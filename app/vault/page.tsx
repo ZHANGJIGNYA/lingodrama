@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ChevronRight, ChevronDown, X, Volume2, Star, Clock, TrendingUp, ArrowLeft } from 'lucide-react'
+import { Search, ChevronRight, ChevronDown, X, Volume2, Star, Clock, TrendingUp, ArrowLeft, Plus, Loader2, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
+import type { Vocabulary } from '@/lib/types'
 
-// Mock 数据
-const mockArchives: Array<{
+// Display item type for vocabulary list
+interface DisplayVocabItem {
   id: number
   word: string
   pos: string
@@ -26,118 +27,40 @@ const mockArchives: Array<{
   timesReviewed: number
   lastReviewed: string
   mastery: number
-}> = [
-  {
-    id: 1,
-    word: 'Treacherous',
-    pos: 'Adjective',
-    posShort: 'Adj',
-    phonetic: '/ˈtretʃərəs/',
-    definition: 'Guilty of betrayal or deception',
-    fullDefinition: 'Guilty of or involving betrayal or deception; hazardous because of presenting hidden or unpredictable dangers.',
-    level: 'B2',
-    source: "The CEO's Secret",
-    episode: 'Ep. 3 - The Betrayal',
-    scene: '/images/scene-betrayal.jpg',
-    examples: [
-      'The treacherous road conditions made driving dangerous.',
-      'She discovered his treacherous plot against the company.',
-    ],
-    synonyms: ['disloyal', 'unfaithful', 'deceitful', 'perfidious'],
-    antonyms: ['loyal', 'faithful', 'trustworthy'],
-    timesReviewed: 5,
-    lastReviewed: '2 days ago',
-    mastery: 75,
-  },
-  {
-    id: 2,
-    word: 'Ruthless',
-    pos: 'Adjective',
-    posShort: 'Adj',
-    phonetic: '/ˈruːθləs/',
-    definition: 'Having no pity or compassion',
-    fullDefinition: 'Having or showing no pity or compassion for others; cruel and determined to succeed.',
-    level: 'B2',
-    source: "The CEO's Secret",
-    episode: 'Ep. 1 - The Takeover',
+}
+
+// Helper function to convert difficulty to CEFR level
+function getLevelFromDifficulty(difficulty: number): string {
+  if (difficulty <= 1) return 'A1'
+  if (difficulty <= 2) return 'A2'
+  if (difficulty <= 3) return 'B1'
+  if (difficulty <= 4) return 'B2'
+  if (difficulty <= 5) return 'C1'
+  return 'C2'
+}
+
+// Transform Vocabulary to DisplayVocabItem
+function transformVocabulary(vocab: Vocabulary, index: number): DisplayVocabItem {
+  return {
+    id: index + 1,
+    word: vocab.word,
+    pos: vocab.part_of_speech || 'Unknown',
+    posShort: (vocab.part_of_speech || 'Unk').slice(0, 3),
+    phonetic: '',
+    definition: vocab.definition,
+    fullDefinition: vocab.definition,
+    level: getLevelFromDifficulty(vocab.difficulty_level),
+    source: vocab.tags.includes('ceo-secret') ? "The CEO's Secret" : 'Drama',
+    episode: vocab.tags.includes('ceo-secret') ? "The CEO's Secret" : 'User Added',
     scene: '/images/scene-power.jpg',
-    examples: [
-      'He was ruthless in his pursuit of power.',
-      'The ruthless CEO fired half the staff.',
-    ],
-    synonyms: ['merciless', 'cruel', 'heartless', 'brutal'],
-    antonyms: ['merciful', 'compassionate', 'kind'],
-    timesReviewed: 8,
-    lastReviewed: '1 day ago',
-    mastery: 90,
-  },
-  {
-    id: 3,
-    word: 'Inevitable',
-    pos: 'Adjective',
-    posShort: 'Adj',
-    phonetic: '/ɪnˈevɪtəbl/',
-    definition: 'Certain to happen; unavoidable',
-    fullDefinition: 'Certain to happen; unavoidable. So frequently experienced or seen that it is completely predictable.',
-    level: 'B1',
-    source: "The CEO's Secret",
-    episode: 'Ep. 5 - The Confrontation',
-    scene: '/images/scene-confrontation.jpg',
-    examples: [
-      'Their confrontation was inevitable.',
-      'Change is inevitable in any growing company.',
-    ],
-    synonyms: ['unavoidable', 'inescapable', 'certain', 'sure'],
-    antonyms: ['avoidable', 'uncertain', 'preventable'],
-    timesReviewed: 3,
-    lastReviewed: '5 days ago',
-    mastery: 60,
-  },
-  {
-    id: 4,
-    word: 'Leverage',
-    pos: 'Noun',
-    posShort: 'N',
-    phonetic: '/ˈlevərɪdʒ/',
-    definition: 'Power to influence or act',
-    fullDefinition: 'The power to influence a person or situation to achieve a particular outcome; advantage gained from a position of strength.',
-    level: 'C1',
-    source: "The CEO's Secret",
-    episode: 'Ep. 2 - Power Play',
-    scene: '/images/scene-power.jpg',
-    examples: [
-      'She used her connections as leverage in the negotiation.',
-      'Having inside information gave him leverage.',
-    ],
-    synonyms: ['influence', 'power', 'advantage', 'clout'],
-    antonyms: ['weakness', 'disadvantage'],
-    timesReviewed: 2,
-    lastReviewed: '1 week ago',
-    mastery: 45,
-  },
-  {
-    id: 5,
-    word: 'Clandestine',
-    pos: 'Adjective',
-    posShort: 'Adj',
-    phonetic: '/klænˈdestɪn/',
-    definition: 'Kept secret or hidden',
-    fullDefinition: 'Kept secret or done secretively, especially because illicit or improper.',
-    level: 'C1',
-    source: "The CEO's Secret",
-    episode: 'Ep. 4 - Hidden Agenda',
-    scene: '/images/scene-betrayal.jpg',
-    examples: [
-      'They held clandestine meetings after midnight.',
-      'The clandestine affair was finally exposed.',
-    ],
-    synonyms: ['secret', 'covert', 'furtive', 'surreptitious'],
-    antonyms: ['open', 'public', 'overt'],
-    timesReviewed: 1,
-    lastReviewed: 'Today',
-    mastery: 30,
-  },
-]
+    examples: vocab.example_sentence ? [vocab.example_sentence] : [],
+    synonyms: [],
+    antonyms: [],
+    timesReviewed: vocab.review_count,
+    lastReviewed: 'Recently',
+    mastery: vocab.mastery_level,
+  }
+}
 
 // CEFR Distribution data
 const cefrData = [
@@ -270,7 +193,7 @@ function WordDetailModal({
   word,
   onClose,
 }: {
-  word: (typeof mockArchives)[0]
+  word: DisplayVocabItem
   onClose: () => void
 }) {
   return (
@@ -461,35 +384,43 @@ function WordDetailModal({
 
 export default function VaultPage() {
   const router = useRouter()
-  const { vocabularyList } = useAppStore()
-  const [selectedWord, setSelectedWord] = useState<(typeof mockArchives)[0] | null>(null)
-  const [archives, setArchives] = useState(mockArchives)
+  const { vocabularyList, setVocabularyList } = useAppStore()
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [wordInput, setWordInput] = useState('')
+  const [isAdding, setIsAdding] = useState(false)
 
-  // 合并 store 中的词汇到 archives
-  useEffect(() => {
-    if (vocabularyList.length > 0) {
-      const storeWords = vocabularyList.map((v, index) => ({
-        id: 100 + index,
-        word: v.word,
-        pos: v.part_of_speech || 'Unknown',
-        posShort: (v.part_of_speech || 'Unk').slice(0, 3),
-        phonetic: '',
-        definition: v.definition,
-        fullDefinition: v.definition,
-        level: getLevelFromDifficulty(v.difficulty_level),
-        source: 'Added',
-        episode: 'User Added',
-        scene: '/images/scene-power.jpg',
-        examples: v.example_sentence ? [v.example_sentence] : [],
-        synonyms: [],
-        antonyms: [],
-        timesReviewed: v.review_count,
-        lastReviewed: 'Recently',
-        mastery: v.mastery_level,
+  // Transform vocabulary list to display format
+  const archives = vocabularyList.map(transformVocabulary)
+
+  const [selectedWord, setSelectedWord] = useState<DisplayVocabItem | null>(null)
+
+  const handleAddWords = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!wordInput.trim()) return
+    setIsAdding(true)
+    setTimeout(() => {
+      const words = wordInput.split(/[,，\s]+/).map(w => w.trim()).filter(w => w.length > 0)
+      const newVocabs: Vocabulary[] = words.map((word, i) => ({
+        id: `new-${Date.now()}-${i}`,
+        user_id: 'mock',
+        word,
+        definition: 'Pending AI analysis...',
+        part_of_speech: 'unknown',
+        difficulty_level: 1,
+        emotional_intensity: 'vibe' as const,
+        tags: ['manual'],
+        next_review_date: new Date().toISOString(),
+        review_count: 0,
+        mastery_level: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }))
-      setArchives([...storeWords, ...mockArchives])
-    }
-  }, [vocabularyList])
+      setVocabularyList([...newVocabs, ...vocabularyList])
+      setWordInput('')
+      setIsAdding(false)
+      setShowAddForm(false)
+    }, 1000)
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -529,6 +460,46 @@ export default function VaultPage() {
                 />
               </div>
             </div>
+
+            {/* Add Words Form */}
+            {!showAddForm ? (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-electric-purple/10 border border-electric-purple/30 rounded-xl text-sm font-medium text-electric-purple hover:bg-electric-purple/20 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add New Words
+              </button>
+            ) : (
+              <form onSubmit={handleAddWords} className="bg-card border border-border rounded-xl p-4">
+                <label className="block text-xs text-muted-foreground mb-2">
+                  Enter words (comma or space separated)
+                </label>
+                <textarea
+                  value={wordInput}
+                  onChange={(e) => setWordInput(e.target.value)}
+                  placeholder="e.g. elastic, cynical, vibrant"
+                  rows={2}
+                  className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-electric-purple resize-none mb-3"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="flex-1 py-2.5 bg-secondary text-muted-foreground rounded-lg text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isAdding || !wordInput.trim()}
+                    className="flex-1 py-2.5 bg-electric-purple text-white rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isAdding ? <><Loader2 className="w-3 h-3 animate-spin" />Adding...</> : <><Plus className="w-3 h-3" />Add</>}
+                  </button>
+                </div>
+              </form>
+            )}
 
             {/* Collapsible Stats */}
             <CollapsibleSection title="CEFR Distribution">
@@ -614,14 +585,4 @@ export default function VaultPage() {
       </AnimatePresence>
     </div>
   )
-}
-
-// 根据难度等级返回 CEFR 级别
-function getLevelFromDifficulty(difficulty: number): string {
-  if (difficulty <= 1) return 'A1'
-  if (difficulty <= 2) return 'A2'
-  if (difficulty <= 3) return 'B1'
-  if (difficulty <= 4) return 'B2'
-  if (difficulty <= 5) return 'C1'
-  return 'C2'
 }

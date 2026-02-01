@@ -9,9 +9,8 @@ import { cn } from '@/lib/utils'
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { userSettings, setUserSettings } = useAppStore()
+  const { userSettings, setUserSettings, interfaceLanguage, setInterfaceLanguage } = useAppStore()
 
-  const [interfaceLanguage, setInterfaceLanguage] = useState<'en' | 'zh'>('en')
   const [cefrLevel, setCefrLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1'>(userSettings?.english_level || 'B1')
   const [definitionStyle, setDefinitionStyle] = useState<'english' | 'native'>('english')
   const [perspective, setPerspective] = useState<'male' | 'female' | 'neutral'>('neutral')
@@ -36,6 +35,14 @@ export default function SettingsPage() {
       setDefinitionStyle('english')
       setPerspective('neutral')
       setWordsPerReview(5)
+      // Also update store settings
+      if (userSettings) {
+        setUserSettings({
+          ...userSettings,
+          english_level: 'B1',
+          words_per_review: 5,
+        })
+      }
     }
   }
 

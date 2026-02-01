@@ -31,7 +31,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   // 在某些页面隐藏导航栏
-  const hiddenPaths = ['/review', '/quiz']
+  const hiddenPaths = ['/quiz']
   if (hiddenPaths.some(path => pathname.startsWith(path))) {
     return null
   }

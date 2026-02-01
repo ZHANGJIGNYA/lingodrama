@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import type { DramaSeries, DramaEpisode, SeriesType } from '@/lib/types'
-import { mockDramaSeries, getDramaSeriesWithVocabs } from '@/lib/mockDramaSeries'
+import { mockDramaSeries } from '@/lib/mockDramaSeries'
+import { createEpisodeFromWords } from '@/lib/dramaGenerator'
 import SeriesSelection from '@/components/drama/SeriesSelection'
 import EpisodeList from '@/components/drama/EpisodeList'
 import DramaPlayer from '@/components/drama/DramaPlayer'
@@ -12,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 type ViewState = 'series-selection' | 'episode-list' | 'player'
 
 export default function ReviewPage() {
-  const { vocabularyList, setVocabularyList } = useAppStore()
+  const { vocabularyList, setVocabularyList, storyVocabulary } = useAppStore()
 
   const [viewState, setViewState] = useState<ViewState>('series-selection')
   const [selectedSeries, setSelectedSeries] = useState<DramaSeries | null>(null)
@@ -32,13 +33,29 @@ export default function ReviewPage() {
   }, [vocabularyList])
 
   const handleSelectSeries = (seriesType: SeriesType) => {
-    // Get vocab IDs from user's vocabulary list
-    const vocabIds = vocabularyList.slice(0, 10).map(v => v.id)
+    // Get base series template
+    const baseSeries = JSON.parse(JSON.stringify(mockDramaSeries[seriesType])) as DramaSeries
 
-    // Get series with vocabs distributed
-    const series = getDramaSeriesWithVocabs(seriesType, vocabIds)
+    // Use storyVocabulary (pushed from Green Room) if available, otherwise use all vocabularyList
+    const wordsToUse = storyVocabulary.length > 0 ? storyVocabulary : vocabularyList.slice(0, 10)
 
-    setSelectedSeries(series)
+    if (wordsToUse.length > 0) {
+      // Generate dynamic episode from user's words
+      const generatedEpisode = createEpisodeFromWords(wordsToUse, 1)
+
+      // Update first episode with generated content
+      baseSeries.episodes[0] = {
+        ...baseSeries.episodes[0],
+        title: generatedEpisode.title,
+        hook: generatedEpisode.hook,
+        duration: generatedEpisode.duration,
+        messages: generatedEpisode.messages,
+        vocabIds: generatedEpisode.vocabIds,
+        unlocked: true,
+      }
+    }
+
+    setSelectedSeries(baseSeries)
     setViewState('episode-list')
   }
 
@@ -92,6 +109,9 @@ export default function ReviewPage() {
     }, 1500)
   }
 
+  // Determine if user has words to review
+  const hasWords = storyVocabulary.length > 0 || vocabularyList.length > 0
+
   return (
     <div className="min-h-screen">
       <AnimatePresence mode="wait">
@@ -141,7 +161,7 @@ export default function ReviewPage() {
       </AnimatePresence>
 
       {/* No words warning */}
-      {vocabularyList.length === 0 && viewState === 'series-selection' && (
+      {!hasWords && viewState === 'series-selection' && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -149,7 +169,7 @@ export default function ReviewPage() {
             className="bg-yellow-900/90 backdrop-blur-md border border-yellow-500/50 rounded-xl px-6 py-3 shadow-2xl"
           >
             <p className="text-sm text-yellow-200">
-              💡 Add words in Vault first to unlock full episodes
+              💡 Add words first, then push them to Story from Green Room
             </p>
           </motion.div>
         </div>
