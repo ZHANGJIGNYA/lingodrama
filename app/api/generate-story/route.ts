@@ -183,7 +183,7 @@ NOW GENERATE A NEW DRAMA FOLLOWING THIS EXACT FORMAT. Remember:
     let storyData
     try {
       // Remove markdown code blocks if present
-      const cleanText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      const cleanText = responseText.replace(/\`\`\`json\n?/g, '').replace(/\`\`\`\n?/g, '').trim()
       storyData = JSON.parse(cleanText)
     } catch (parseError) {
       console.error('Failed to parse Claude response:', responseText)
