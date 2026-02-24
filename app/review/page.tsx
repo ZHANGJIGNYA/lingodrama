@@ -4,22 +4,22 @@ import { useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import type { DramaSeries, DramaEpisode, SeriesType } from '@/lib/types'
 import { mockDramaSeries } from '@/lib/mockDramaSeries'
-import { createEpisodeFromWords } from '@/lib/dramaGenerator'
 import SeriesSelection from '@/components/drama/SeriesSelection'
 import EpisodeList from '@/components/drama/EpisodeList'
 import DramaPlayer from '@/components/drama/DramaPlayer'
 import { motion, AnimatePresence } from 'framer-motion'
 
-type ViewState = 'series-selection' | 'episode-list' | 'player'
+type ViewState = 'series-selection' | 'episode-list' | 'player' | 'generating'
 
 export default function ReviewPage() {
-  const { vocabularyList, setVocabularyList, storyVocabulary } = useAppStore()
+  const { vocabularyList, setVocabularyList, storyVocabulary, interfaceLanguage } = useAppStore()
 
   const [viewState, setViewState] = useState<ViewState>('series-selection')
   const [selectedSeries, setSelectedSeries] = useState<DramaSeries | null>(null)
   const [selectedEpisode, setSelectedEpisode] = useState<DramaEpisode | null>(null)
   const [completedEpisodes, setCompletedEpisodes] = useState<number[]>([])
   const [masteryLevel, setMasteryLevel] = useState<number>(0)
+  const [generationError, setGenerationError] = useState<string | null>(null)
 
   // Calculate mastery level based on vocabulary mastery
   useEffect(() => {
@@ -32,31 +32,55 @@ export default function ReviewPage() {
     setMasteryLevel(Math.round(avgMastery))
   }, [vocabularyList])
 
-  const handleSelectSeries = (seriesType: SeriesType) => {
-    // Get base series template
+  const handleSelectSeries = async (seriesType: SeriesType) => {
     const baseSeries = JSON.parse(JSON.stringify(mockDramaSeries[seriesType])) as DramaSeries
-
-    // Use storyVocabulary (pushed from Green Room) if available, otherwise use all vocabularyList
     const wordsToUse = storyVocabulary.length > 0 ? storyVocabulary : vocabularyList.slice(0, 10)
 
-    if (wordsToUse.length > 0) {
-      // Generate dynamic episode from user's words
-      const generatedEpisode = createEpisodeFromWords(wordsToUse, 1)
-
-      // Update first episode with generated content
-      baseSeries.episodes[0] = {
-        ...baseSeries.episodes[0],
-        title: generatedEpisode.title,
-        hook: generatedEpisode.hook,
-        duration: generatedEpisode.duration,
-        messages: generatedEpisode.messages,
-        vocabIds: generatedEpisode.vocabIds,
-        unlocked: true,
-      }
+    if (wordsToUse.length === 0) {
+      setSelectedSeries(baseSeries)
+      setViewState('episode-list')
+      return
     }
 
-    setSelectedSeries(baseSeries)
-    setViewState('episode-list')
+    // Show generating state
+    setViewState('generating')
+    setGenerationError(null)
+
+    try {
+      const response = await fetch('/api/generate-story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          words: wordsToUse.map(w => ({ word: w.word, definition: w.definition })),
+          genre: baseSeries.title,
+          language: interfaceLanguage,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate story')
+      }
+
+      const data = await response.json()
+
+      // Update first episode with AI-generated content
+      baseSeries.episodes[0] = {
+        ...baseSeries.episodes[0],
+        title: data.title || baseSeries.episodes[0].title,
+        hook: data.hook || baseSeries.episodes[0].hook,
+        duration: `${Math.max(3, Math.ceil(data.messages.length / 5))} min`,
+        messages: data.messages,
+        vocabIds: wordsToUse.map(w => w.id),
+        unlocked: true,
+      }
+
+      setSelectedSeries(baseSeries)
+      setViewState('episode-list')
+    } catch (error) {
+      console.error('Story generation failed:', error)
+      setGenerationError('Story generation failed. Please try again.')
+      setViewState('series-selection')
+    }
   }
 
   const handleSelectEpisode = (episode: DramaEpisode) => {
@@ -115,6 +139,32 @@ export default function ReviewPage() {
   return (
     <div className="min-h-screen">
       <AnimatePresence mode="wait">
+        {viewState === 'generating' && (
+          <motion.div
+            key="generating"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen flex flex-col items-center justify-center px-4"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
+              className="mb-6"
+            >
+              <div className="w-16 h-16 rounded-full border-4 border-electric-purple/30 border-t-electric-purple" />
+            </motion.div>
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="text-center"
+            >
+              <h2 className="font-serif text-xl font-bold text-foreground mb-2">Writing Your Story...</h2>
+              <p className="text-sm text-muted-foreground">AI is crafting a drama with your vocabulary words</p>
+            </motion.div>
+          </motion.div>
+        )}
+
         {viewState === 'series-selection' && (
           <motion.div
             key="series-selection"
@@ -174,6 +224,28 @@ export default function ReviewPage() {
           </motion.div>
         </div>
       )}
+
+      {/* Generation error toast */}
+      <AnimatePresence>
+        {generationError && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div className="bg-red-900/90 backdrop-blur-md border border-red-500/50 rounded-xl px-6 py-3 shadow-2xl">
+              <p className="text-sm text-red-200">{generationError}</p>
+              <button
+                onClick={() => setGenerationError(null)}
+                className="text-xs text-red-300 underline mt-1"
+              >
+                Dismiss
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
