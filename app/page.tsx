@@ -269,9 +269,8 @@ function MissionDashboard({
 
     setCaptureInput("");
 
-    // Add each word with AI translation
-    for (const word of words) {
-      // First add with pending status
+    // Add all words immediately with pending status
+    const wordIds = words.map(word => {
       const tempId = `cap-${Date.now()}-${Math.random()}`;
       addVocabulary({
         id: tempId,
@@ -288,28 +287,31 @@ function MissionDashboard({
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
+      return { word, id: tempId };
+    });
 
-      // Fetch translation in background
-      try {
-        const response = await fetch('/api/translate-word', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ word }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          // Update the vocabulary with translation
-          updateVocabulary(tempId, {
-            definition: data.definition || "No definition available",
-            part_of_speech: data.part_of_speech || "unknown",
+    // Fetch all translations in parallel
+    await Promise.all(
+      wordIds.map(async ({ word, id }) => {
+        try {
+          const response = await fetch('/api/translate-word', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ word }),
           });
+
+          if (response.ok) {
+            const data = await response.json();
+            updateVocabulary(id, {
+              definition: data.definition || "No definition available",
+              part_of_speech: data.part_of_speech || "unknown",
+            });
+          }
+        } catch (error) {
+          console.error('Translation failed for', word, error);
         }
-      } catch (error) {
-        console.error('Translation failed:', error);
-        // Keep "Translating..." if failed
-      }
-    }
+      })
+    );
   };
 
   const handleDeleteWord = (id: string) => {

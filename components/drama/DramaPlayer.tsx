@@ -120,19 +120,9 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
     .filter(Boolean) as Vocabulary[]
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Cinematic film effects */}
-      <div className="fixed inset-0 pointer-events-none z-50">
-        {/* Film grain overlay */}
-        <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNhKSIvPjwvc3ZnPg==')]" />
-        {/* Vignette */}
-        <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.4)]" />
-        {/* Subtle scanlines */}
-        <div className="absolute inset-0 opacity-[0.02] bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(0,0,0,0.3)_1px,rgba(0,0,0,0.3)_2px)]" />
-      </div>
-
-      {/* Header */}
-      <div className="relative z-10 px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-border">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 px-4 py-3 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between mb-2 max-w-md mx-auto">
           <button
             onClick={onBack}
@@ -154,9 +144,9 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
         </div>
 
         {/* Progress bar */}
-        <div className="h-1 bg-secondary rounded-full overflow-hidden max-w-md mx-auto">
+        <div className="max-w-md mx-auto h-1 bg-secondary rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-electric-purple to-danger-red"
+            className="h-full bg-electric-purple"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.3 }}
@@ -199,45 +189,47 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
         )}
       </AnimatePresence>
 
-      {/* Messages Container */}
-      <div className="relative z-10 max-w-md mx-auto px-4 py-6 pb-32 min-h-[calc(100vh-180px)]">
-        {visibleMessages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            isUser={message.sender === 'You'}
-            wordStates={wordStates}
-            vocabularyList={allVocabulary}
-            onWordClick={handleWordClick}
-            onWordReveal={handleWordReveal}
-          />
-        ))}
+      {/* Scrollable Messages */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-md mx-auto px-4 py-6">
+          {visibleMessages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              isUser={message.sender === 'You'}
+              wordStates={wordStates}
+              vocabularyList={allVocabulary}
+              onWordClick={handleWordClick}
+              onWordReveal={handleWordReveal}
+            />
+          ))}
 
-        {/* Typing indicator */}
-        {isTyping && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex gap-3 mb-4"
-          >
-            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-lg">
-              {episode.messages[currentMsgIndex + 1]?.avatar}
-            </div>
-            <div className="bg-card border border-border px-5 py-3 rounded-2xl rounded-tl-sm">
-              <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          {/* Typing indicator */}
+          {isTyping && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex gap-3 mb-4"
+            >
+              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-lg">
+                {episode.messages[currentMsgIndex + 1]?.avatar}
               </div>
-            </div>
-          </motion.div>
-        )}
+              <div className="bg-card border border-border px-5 py-3 rounded-2xl rounded-tl-sm">
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </motion.div>
+          )}
 
-        <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Bottom Continue Button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/80 to-transparent p-4 z-10">
+      {/* Sticky Bottom Button */}
+      <div className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent p-4 z-10">
         <div className="max-w-md mx-auto">
           <motion.button
             whileHover={{ scale: 1.02 }}

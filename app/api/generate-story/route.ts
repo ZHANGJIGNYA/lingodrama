@@ -117,10 +117,23 @@ export async function POST(request: NextRequest) {
 - Output ONLY valid JSON, no markdown code blocks
 - Exactly 8-10 messages
 - EACH MESSAGE MUST BE SHORT (1-3 sentences, like real chat)
+- NEVER use "Narrator" as sender - ONLY use character names
+- NEVER describe what characters said - ONLY direct dialogue
+- BAD: Narrator: "Mrs. Wang shouted at Xiaoya"
+- GOOD: Mrs. Wang: "Get out of my house!"
 - Every message must advance the plot
 - Make it ADDICTIVE and satisfying
 - Use Chinese drama tropes: hidden identity, face-slapping, revenge
-- Keep dialogue punchy and emotional`
+- Keep dialogue punchy and emotional
+
+EXAMPLE OF CORRECT FORMAT:
+{
+  "messages": [
+    {"sender": "Mrs. Wang", "text": "Get out! You don't *deserve* my son!"},
+    {"sender": "Xiaoya", "text": "This is my building."},
+    {"sender": "Mrs. Wang", "text": "What? That's impossible!"}
+  ]
+}`
 
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
