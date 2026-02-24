@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
-  baseURL: process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com',
+  baseURL: process.env.ANTHROPIC_BASE_URL ? `${process.env.ANTHROPIC_BASE_URL}/v1` : 'https://api.anthropic.com/v1',
 })
 
 interface VocabWord {
@@ -146,8 +146,16 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error generating story:', error)
+    console.error('Error details:', JSON.stringify(error, null, 2))
+
+    // Return more detailed error for debugging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to generate story' },
+      {
+        error: 'Failed to generate story',
+        details: errorMessage,
+        baseURL: process.env.ANTHROPIC_BASE_URL || 'not set'
+      },
       { status: 500 }
     )
   }
