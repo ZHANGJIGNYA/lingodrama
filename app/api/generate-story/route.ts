@@ -163,7 +163,7 @@ NOW GENERATE A NEW DRAMA FOLLOWING THIS EXACT FORMAT. Remember:
 - NEVER use "Narrator"
 - Direct dialogue only, no descriptions
 - 1-3 short sentences per message
-- Mark vocabulary words with asterisks in the text
+- Mark vocabulary words with asterisks in the text`
 
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
