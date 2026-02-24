@@ -1722,8 +1722,8 @@ function ProfileSettingsComponent() {
   const [definitionStyle, setDefinitionStyle] = useState<"english" | "native">(
     "english",
   );
-  const [perspective, setPerspective] = useState<"male" | "female" | "neutral">(
-    "neutral",
+  const [perspective, setPerspective] = useState<"male" | "female" | "unspecified">(
+    "unspecified",
   );
   const [wordsPerReview, setWordsPerReview] = useState(3);
 
@@ -1845,7 +1845,7 @@ function ProfileSettingsComponent() {
             Perspective
           </h3>
           <div className="flex gap-2 p-1 bg-secondary rounded-lg">
-            {(["male", "female", "neutral"] as const).map((option) => (
+            {(["male", "female", "unspecified"] as const).map((option) => (
               <button
                 key={option}
                 type="button"
@@ -1857,7 +1857,7 @@ function ProfileSettingsComponent() {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {option}
+                {option === 'unspecified' ? 'Neutral' : option}
               </button>
             ))}
           </div>
