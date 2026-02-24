@@ -56,7 +56,7 @@ export default function ReviewPage() {
           language: interfaceLanguage,
           userLevel: userSettings?.english_level || 'B1',
           definitionPreference: userSettings?.definition_preference || 'simple_english',
-          perspective: userSettings?.gender || 'neutral',
+          perspective: userSettings?.gender || 'unspecified',
         }),
       })
 

@@ -15,8 +15,8 @@ export default function SettingsPage() {
   const [definitionStyle, setDefinitionStyle] = useState<'english' | 'native'>(
     userSettings?.definition_preference === 'native_language' ? 'native' : 'english'
   )
-  const [perspective, setPerspective] = useState<'male' | 'female' | 'neutral'>(
-    (userSettings?.gender as 'male' | 'female' | 'neutral') || 'neutral'
+  const [perspective, setPerspective] = useState<'male' | 'female' | 'unspecified'>(
+    (userSettings?.gender as 'male' | 'female' | 'unspecified') || 'unspecified'
   )
   const [wordsPerReview, setWordsPerReview] = useState<number>(userSettings?.words_per_review || 5)
 
@@ -41,7 +41,7 @@ export default function SettingsPage() {
       setTheme('dark')
       setCefrLevel('B1')
       setDefinitionStyle('english')
-      setPerspective('neutral')
+      setPerspective('unspecified')
       setWordsPerReview(5)
       if (userSettings) {
         setUserSettings({
@@ -237,7 +237,7 @@ export default function SettingsPage() {
                   Perspective
                 </h3>
                 <div className="flex gap-2 p-1 bg-secondary rounded-lg">
-                  {(['male', 'female', 'neutral'] as const).map((option) => (
+                  {(['male', 'female', 'unspecified'] as const).map((option) => (
                     <button
                       key={option}
                       type="button"
@@ -249,7 +249,7 @@ export default function SettingsPage() {
                           : 'text-muted-foreground hover:text-foreground'
                       )}
                     >
-                      {option}
+                      {option === 'unspecified' ? 'Neutral' : option}
                     </button>
                   ))}
                 </div>
