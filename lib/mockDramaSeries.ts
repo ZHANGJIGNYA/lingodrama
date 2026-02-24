@@ -1075,7 +1075,7 @@ export const mockDramaSeries: Record<string, DramaSeries> = {
         unlocked: false,
         masteryRequired: 80,
         vocabIds: [],
-        messages: maleEpisode3Messages
+        messages: maleEpisode1Messages // Placeholder - will be replaced by AI generation
       }
     ]
   },
@@ -1096,7 +1096,7 @@ export const mockDramaSeries: Record<string, DramaSeries> = {
         unlocked: true,
         masteryRequired: 0,
         vocabIds: [],
-        messages: neutralEpisode1Messages
+        messages: maleEpisode1Messages // Placeholder - will be replaced by AI generation
       },
       {
         id: 2,
@@ -1106,7 +1106,7 @@ export const mockDramaSeries: Record<string, DramaSeries> = {
         unlocked: false,
         masteryRequired: 60,
         vocabIds: [],
-        messages: neutralEpisode2Messages
+        messages: maleEpisode1Messages // Placeholder - will be replaced by AI generation
       },
       {
         id: 3,
@@ -1116,7 +1116,7 @@ export const mockDramaSeries: Record<string, DramaSeries> = {
         unlocked: false,
         masteryRequired: 80,
         vocabIds: [],
-        messages: neutralEpisode3Messages
+        messages: maleEpisode1Messages // Placeholder - will be replaced by AI generation
       }
     ]
   }
