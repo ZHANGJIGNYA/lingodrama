@@ -89,8 +89,14 @@ export async function POST(request: NextRequest) {
 - Like real text messages or chat bubbles
 - NO long paragraphs or monologues
 - Break long thoughts into multiple messages
-- Example GOOD: "What? You're firing me?"
-- Example BAD: "I can't believe you're firing me after everything I've done for this company and all the years I've dedicated to making sure everything runs smoothly."
+- EACH CHARACTER SPEAKS IN SEPARATE MESSAGES
+- Example GOOD:
+  Message 1 - Mrs. Wang: "What? You're firing me?"
+  Message 2 - Xiaoya: "Yes. Pack your things."
+- Example BAD:
+  Message 1 - Narrator: "Mrs. Wang said 'What? You're firing me?' and Xiaoya replied 'Yes. Pack your things.'"
+- NEVER use narrator to describe dialogue
+- ALWAYS use character names as sender
 
 ## OUTPUT FORMAT (JSON only):
 {

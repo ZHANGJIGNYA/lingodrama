@@ -235,7 +235,7 @@ function MissionDashboard({
   wordsToReviewCount: number;
   vocabularyList: import("@/lib/types").Vocabulary[];
 }) {
-  const { addVocabulary, removeVocabulary, pushWordsToStory, storyVocabulary, dueForQuiz, updateDueForQuiz } = useAppStore();
+  const { addVocabulary, updateVocabulary, removeVocabulary, pushWordsToStory, storyVocabulary, dueForQuiz, updateDueForQuiz } = useAppStore();
   const [captureInput, setCaptureInput] = useState("");
   const router = useRouter();
 
@@ -266,6 +266,8 @@ function MissionDashboard({
       .split(/[,，]/)
       .map(w => w.trim())
       .filter(w => w.length > 0);
+
+    setCaptureInput("");
 
     // Add each word with AI translation
     for (const word of words) {
@@ -298,23 +300,16 @@ function MissionDashboard({
         if (response.ok) {
           const data = await response.json();
           // Update the vocabulary with translation
-          const updatedVocab = vocabularyList.find(v => v.id === tempId);
-          if (updatedVocab) {
-            addVocabulary({
-              ...updatedVocab,
-              definition: data.definition || "No definition available",
-              part_of_speech: data.part_of_speech || "unknown",
-            });
-            removeVocabulary(tempId);
-          }
+          updateVocabulary(tempId, {
+            definition: data.definition || "No definition available",
+            part_of_speech: data.part_of_speech || "unknown",
+          });
         }
       } catch (error) {
         console.error('Translation failed:', error);
         // Keep "Translating..." if failed
       }
     }
-
-    setCaptureInput("");
   };
 
   const handleDeleteWord = (id: string) => {

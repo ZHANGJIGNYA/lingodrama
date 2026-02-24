@@ -28,6 +28,7 @@ interface AppState {
   vocabularyList: Vocabulary[]
   setVocabularyList: (list: Vocabulary[]) => void
   addVocabulary: (vocab: Vocabulary) => void
+  updateVocabulary: (id: string, updates: Partial<Vocabulary>) => void
   removeVocabulary: (id: string) => void
 
   // 已推送到故事的词汇
@@ -113,6 +114,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       vocabularyList: [...state.vocabularyList, vocab],
       wordsToReview: [...state.wordsToReview, vocab],
+    })),
+
+  updateVocabulary: (id: string, updates: Partial<Vocabulary>) =>
+    set((state) => ({
+      vocabularyList: state.vocabularyList.map((v) =>
+        v.id === id ? { ...v, ...updates } : v
+      ),
+      wordsToReview: state.wordsToReview.map((v) =>
+        v.id === id ? { ...v, ...updates } : v
+      ),
     })),
 
   removeVocabulary: (id) =>
