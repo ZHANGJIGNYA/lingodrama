@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 - Keep dialogue punchy and emotional`
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet',
       max_tokens: 2000,
       temperature: 0.8,
       messages: [
