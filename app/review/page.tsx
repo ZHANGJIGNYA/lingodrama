@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 type ViewState = 'series-selection' | 'episode-list' | 'player' | 'generating'
 
 export default function ReviewPage() {
-  const { vocabularyList, setVocabularyList, storyVocabulary, interfaceLanguage } = useAppStore()
+  const { vocabularyList, setVocabularyList, storyVocabulary, interfaceLanguage, userSettings } = useAppStore()
 
   const [viewState, setViewState] = useState<ViewState>('series-selection')
   const [selectedSeries, setSelectedSeries] = useState<DramaSeries | null>(null)
@@ -54,6 +54,9 @@ export default function ReviewPage() {
           words: wordsToUse.map(w => ({ word: w.word, definition: w.definition })),
           genre: baseSeries.title,
           language: interfaceLanguage,
+          userLevel: userSettings?.english_level || 'B1',
+          definitionPreference: userSettings?.definition_preference || 'english_only',
+          perspective: userSettings?.gender || 'neutral',
         }),
       })
 

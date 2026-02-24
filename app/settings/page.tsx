@@ -12,8 +12,12 @@ export default function SettingsPage() {
   const { userSettings, setUserSettings, interfaceLanguage, setInterfaceLanguage, theme, setTheme } = useAppStore()
 
   const [cefrLevel, setCefrLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1'>(userSettings?.english_level || 'B1')
-  const [definitionStyle, setDefinitionStyle] = useState<'english' | 'native'>('english')
-  const [perspective, setPerspective] = useState<'male' | 'female' | 'neutral'>('neutral')
+  const [definitionStyle, setDefinitionStyle] = useState<'english' | 'native'>(
+    userSettings?.definition_preference === 'native_language' ? 'native' : 'english'
+  )
+  const [perspective, setPerspective] = useState<'male' | 'female' | 'neutral'>(
+    (userSettings?.gender as 'male' | 'female' | 'neutral') || 'neutral'
+  )
   const [wordsPerReview, setWordsPerReview] = useState<number>(userSettings?.words_per_review || 5)
 
   const cefrLevels: Array<'A1' | 'A2' | 'B1' | 'B2' | 'C1'> = ['A1', 'A2', 'B1', 'B2', 'C1']
@@ -24,7 +28,10 @@ export default function SettingsPage() {
         ...userSettings,
         english_level: cefrLevel,
         words_per_review: wordsPerReview as 3 | 5 | 8,
+        definition_preference: definitionStyle === 'native' ? 'native_language' : 'english_only',
+        gender: perspective,
       })
+      alert('Settings saved successfully!')
     }
   }
 

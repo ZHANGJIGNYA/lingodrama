@@ -22,7 +22,7 @@ interface GeneratedMessage {
 
 export async function POST(request: NextRequest) {
   try {
-    const { words, genre, language, userLevel = 'B1' } = await request.json()
+    const { words, genre, language, userLevel = 'B1', definitionPreference = 'english_only', perspective = 'neutral' } = await request.json()
 
     if (!words || words.length === 0) {
       return NextResponse.json({ error: 'No words provided' }, { status: 400 })
@@ -30,7 +30,15 @@ export async function POST(request: NextRequest) {
 
     const wordList = words.map((w: VocabWord) => `${w.word}`).join(', ')
 
+    // Determine if we should provide Chinese definitions
+    const shouldProvideChinese = definitionPreference === 'native_language' && language === 'zh'
+
     const prompt = `You are a specialist in writing addictive Chinese-style short dramas (短剧). Generate a chat-style drama that naturally incorporates these vocabulary words: ${wordList}
+
+## USER PREFERENCES:
+- English Level: ${userLevel} (CEFR)
+- Perspective: ${perspective === 'male' ? 'Male protagonist' : perspective === 'female' ? 'Female protagonist' : 'Neutral/flexible'}
+- Definition Language: ${shouldProvideChinese ? 'Provide Chinese translations in vocab array' : 'English only'}
 
 ## CORE REQUIREMENTS:
 
