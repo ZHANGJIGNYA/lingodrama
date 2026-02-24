@@ -33,9 +33,11 @@ export default function DramaPlayer({ series, episode, onBack, onComplete }: Dra
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Auto-scroll to bottom when new message appears
+  // Auto-scroll to bottom when new message appears, but keep button visible
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
   }, [currentMsgIndex])
 
   // Initialize word states
