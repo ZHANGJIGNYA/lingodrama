@@ -260,21 +260,32 @@ function MissionDashboard({
 
   const handleCapture = () => {
     if (!captureInput.trim()) return;
-    addVocabulary({
-      id: `cap-${Date.now()}`,
-      user_id: "mock",
-      word: captureInput.trim(),
-      definition: "Pending AI analysis...",
-      part_of_speech: "unknown",
-      difficulty_level: 1,
-      emotional_intensity: "vibe",
-      tags: ["manual"],
-      next_review_date: new Date().toISOString(),
-      review_count: 0,
-      mastery_level: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+
+    // Split by comma and filter empty strings
+    const words = captureInput
+      .split(/[,，]/)
+      .map(w => w.trim())
+      .filter(w => w.length > 0);
+
+    // Add each word
+    words.forEach(word => {
+      addVocabulary({
+        id: `cap-${Date.now()}-${Math.random()}`,
+        user_id: "mock",
+        word: word,
+        definition: "Pending AI analysis...",
+        part_of_speech: "unknown",
+        difficulty_level: 1,
+        emotional_intensity: "vibe",
+        tags: ["manual"],
+        next_review_date: new Date().toISOString(),
+        review_count: 0,
+        mastery_level: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
     });
+
     setCaptureInput("");
   };
 
@@ -374,7 +385,7 @@ function MissionDashboard({
             value={captureInput}
             onChange={(e) => setCaptureInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCapture()}
-            placeholder="Type new word to encrypt..."
+            placeholder="Type words (separate with commas)..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           <button type="button" onClick={handleCapture}>
