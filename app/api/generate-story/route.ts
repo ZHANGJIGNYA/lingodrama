@@ -22,7 +22,7 @@ interface GeneratedMessage {
 
 export async function POST(request: NextRequest) {
   try {
-    const { words, genre, language, userLevel = 'B1', definitionPreference = 'english_only', perspective = 'neutral' } = await request.json()
+    const { words, genre, language, userLevel = 'B1', definitionPreference = 'simple_english', perspective = 'neutral' } = await request.json()
 
     if (!words || words.length === 0) {
       return NextResponse.json({ error: 'No words provided' }, { status: 400 })

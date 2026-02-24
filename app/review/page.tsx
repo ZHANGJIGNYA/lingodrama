@@ -55,7 +55,7 @@ export default function ReviewPage() {
           genre: baseSeries.title,
           language: interfaceLanguage,
           userLevel: userSettings?.english_level || 'B1',
-          definitionPreference: userSettings?.definition_preference || 'english_only',
+          definitionPreference: userSettings?.definition_preference || 'simple_english',
           perspective: userSettings?.gender || 'neutral',
         }),
       })

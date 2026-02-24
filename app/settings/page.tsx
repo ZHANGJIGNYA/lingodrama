@@ -28,7 +28,7 @@ export default function SettingsPage() {
         ...userSettings,
         english_level: cefrLevel,
         words_per_review: wordsPerReview as 3 | 5 | 8,
-        definition_preference: definitionStyle === 'native' ? 'native_language' : 'english_only',
+        definition_preference: definitionStyle === 'native' ? 'native_language' : 'simple_english',
         gender: perspective,
       })
       alert('Settings saved successfully!')
