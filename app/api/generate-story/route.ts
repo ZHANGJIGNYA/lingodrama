@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
-  baseURL: process.env.ANTHROPIC_BASE_URL ? `${process.env.ANTHROPIC_BASE_URL}/v1` : 'https://api.anthropic.com/v1',
+  baseURL: process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com/v1',
 })
 
 interface VocabWord {
