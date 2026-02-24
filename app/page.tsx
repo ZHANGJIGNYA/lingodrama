@@ -258,7 +258,7 @@ function MissionDashboard({
     (v) => new Date(v.created_at).toDateString() === today
   );
 
-  const handleCapture = () => {
+  const handleCapture = async () => {
     if (!captureInput.trim()) return;
 
     // Split by comma and filter empty strings
@@ -267,13 +267,15 @@ function MissionDashboard({
       .map(w => w.trim())
       .filter(w => w.length > 0);
 
-    // Add each word
-    words.forEach(word => {
+    // Add each word with AI translation
+    for (const word of words) {
+      // First add with pending status
+      const tempId = `cap-${Date.now()}-${Math.random()}`;
       addVocabulary({
-        id: `cap-${Date.now()}-${Math.random()}`,
+        id: tempId,
         user_id: "mock",
         word: word,
-        definition: "Pending AI analysis...",
+        definition: "Translating...",
         part_of_speech: "unknown",
         difficulty_level: 1,
         emotional_intensity: "vibe",
@@ -284,7 +286,33 @@ function MissionDashboard({
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
-    });
+
+      // Fetch translation in background
+      try {
+        const response = await fetch('/api/translate-word', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ word }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Update the vocabulary with translation
+          const updatedVocab = vocabularyList.find(v => v.id === tempId);
+          if (updatedVocab) {
+            addVocabulary({
+              ...updatedVocab,
+              definition: data.definition || "No definition available",
+              part_of_speech: data.part_of_speech || "unknown",
+            });
+            removeVocabulary(tempId);
+          }
+        }
+      } catch (error) {
+        console.error('Translation failed:', error);
+        // Keep "Translating..." if failed
+      }
+    }
 
     setCaptureInput("");
   };

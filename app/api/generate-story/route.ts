@@ -84,6 +84,14 @@ export async function POST(request: NextRequest) {
 - Use simple, conversational English
 - Avoid complex grammar or rare words
 
+### 8. MESSAGE LENGTH (CRITICAL):
+- Each message should be 1-3 SHORT sentences maximum
+- Like real text messages or chat bubbles
+- NO long paragraphs or monologues
+- Break long thoughts into multiple messages
+- Example GOOD: "What? You're firing me?"
+- Example BAD: "I can't believe you're firing me after everything I've done for this company and all the years I've dedicated to making sure everything runs smoothly."
+
 ## OUTPUT FORMAT (JSON only):
 {
   "title": "Dramatic episode title",
@@ -92,7 +100,7 @@ export async function POST(request: NextRequest) {
     {
       "sender": "Character name or 'Narrator'",
       "avatar": "😱" (emoji matching emotion),
-      "text": "Dialogue with *target_word* marked",
+      "text": "Short dialogue with *target_word* marked (1-3 sentences max)",
       "vocabs": [{"word": "target_word", "type": "highlight"}],
       "isImage": false
     }
@@ -102,6 +110,7 @@ export async function POST(request: NextRequest) {
 ## CRITICAL RULES:
 - Output ONLY valid JSON, no markdown code blocks
 - Exactly 8-10 messages
+- EACH MESSAGE MUST BE SHORT (1-3 sentences, like real chat)
 - Every message must advance the plot
 - Make it ADDICTIVE and satisfying
 - Use Chinese drama tropes: hidden identity, face-slapping, revenge
