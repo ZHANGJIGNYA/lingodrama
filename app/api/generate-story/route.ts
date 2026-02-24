@@ -119,21 +119,51 @@ export async function POST(request: NextRequest) {
 - EACH MESSAGE MUST BE SHORT (1-3 sentences, like real chat)
 - NEVER use "Narrator" as sender - ONLY use character names
 - NEVER describe what characters said - ONLY direct dialogue
-- BAD: Narrator: "Mrs. Wang shouted at Xiaoya"
-- GOOD: Mrs. Wang: "Get out of my house!"
 - Every message must advance the plot
 - Make it ADDICTIVE and satisfying
 - Use Chinese drama tropes: hidden identity, face-slapping, revenge
 - Keep dialogue punchy and emotional
 
-EXAMPLE OF CORRECT FORMAT:
+## COMPLETE EXAMPLE 1 (Hidden Identity Reveal):
 {
+  "title": "The Billionaire Janitor",
+  "hook": "She threw money at him, not knowing he owned the building",
   "messages": [
-    {"sender": "Mrs. Wang", "text": "Get out! You don't *deserve* my son!"},
-    {"sender": "Xiaoya", "text": "This is my building."},
-    {"sender": "Mrs. Wang", "text": "What? That's impossible!"}
+    {"sender": "Mrs. Chen", "avatar": "😤", "text": "Take this money and get out! You're just a *poor* janitor!", "vocabs": [{"word": "poor", "type": "highlight"}], "isImage": false},
+    {"sender": "Xiaoming", "avatar": "😐", "text": "I don't need your money.", "vocabs": [], "isImage": false},
+    {"sender": "Mrs. Chen", "avatar": "😠", "text": "How *dare* you refuse me? Do you know who I am?", "vocabs": [{"word": "dare", "type": "highlight"}], "isImage": false},
+    {"sender": "Xiaoming", "avatar": "😏", "text": "I'm the owner of this building. You have 24 hours to move out.", "vocabs": [], "isImage": false},
+    {"sender": "Mrs. Chen", "avatar": "😱", "text": "What? That's impossible!", "vocabs": [], "isImage": false},
+    {"sender": "Xiaoming", "avatar": "😎", "text": "Check the property records. I'm very *confident* you'll find my name.", "vocabs": [{"word": "confident", "type": "highlight"}], "isImage": false},
+    {"sender": "Mrs. Chen", "avatar": "😰", "text": "Please, I was wrong! Give me another chance!", "vocabs": [], "isImage": false},
+    {"sender": "Xiaoming", "avatar": "🚪", "text": "You should *apologize* to all the workers you insulted. Then we'll talk.", "vocabs": [{"word": "apologize", "type": "highlight"}], "isImage": false}
   ]
-}`
+}
+
+## COMPLETE EXAMPLE 2 (Revenge Drama):
+{
+  "title": "The Ex-Wife's Return",
+  "hook": "He divorced her for being useless, now she's his boss",
+  "messages": [
+    {"sender": "Zhang Wei", "avatar": "😤", "text": "Sign these divorce papers! You're *useless* to me!", "vocabs": [{"word": "useless", "type": "highlight"}], "isImage": false},
+    {"sender": "Lili", "avatar": "😢", "text": "Fine. I'll sign.", "vocabs": [], "isImage": false},
+    {"sender": "Zhang Wei", "avatar": "😏", "text": "Good. Now get out of my house.", "vocabs": [], "isImage": false},
+    {"sender": "Lili", "avatar": "😐", "text": "Actually, this is my house. I bought it last year.", "vocabs": [], "isImage": false},
+    {"sender": "Zhang Wei", "avatar": "😨", "text": "What? How did you get so much money?", "vocabs": [], "isImage": false},
+    {"sender": "Lili", "avatar": "😎", "text": "I'm the CEO of Chen Corporation. Your company's biggest client.", "vocabs": [], "isImage": false},
+    {"sender": "Zhang Wei", "avatar": "😰", "text": "Lili, I was wrong! Can we talk about this?", "vocabs": [], "isImage": false},
+    {"sender": "Lili", "avatar": "💼", "text": "I'm *busy* with important meetings. Security will show you out.", "vocabs": [{"word": "busy", "type": "highlight"}], "isImage": false},
+    {"sender": "Zhang Wei", "avatar": "😭", "text": "Please! I'll do anything!", "vocabs": [], "isImage": false},
+    {"sender": "Lili", "avatar": "👋", "text": "You had your chance. Goodbye, Zhang Wei.", "vocabs": [], "isImage": false}
+  ]
+}
+
+NOW GENERATE A NEW DRAMA FOLLOWING THIS EXACT FORMAT. Remember:
+- ONLY character names as sender (Mrs. Wang, Xiaoya, Chen Hao, etc.)
+- NEVER use "Narrator"
+- Direct dialogue only, no descriptions
+- 1-3 short sentences per message
+- Mark vocabulary words with asterisks in the text
 
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
