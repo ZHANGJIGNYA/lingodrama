@@ -243,11 +243,13 @@ export interface DramaEpisode {
   id: number
   title: string
   hook: string // 吸引人的标题
-  duration: string // "8 min"
-  unlocked: boolean
+  genre?: string // 剧情类型 (optional for fixed dramas)
+  coverImage?: string // 封面图片 (optional for fixed dramas)
+  duration?: string // "8 min"
+  unlocked?: boolean
   cliffhanger?: string // 上集结尾悬念
-  masteryRequired: number // 解锁需要的掌握度 (0-100)
-  vocabIds: string[] // 对应 Vocabulary 的 id
+  masteryRequired?: number // 解锁需要的掌握度 (0-100)
+  vocabIds?: string[] // 对应 Vocabulary 的 id
   messages: DramaMessage[]
 }
 
