@@ -254,7 +254,7 @@ export interface DramaEpisode {
 export interface DramaMessage {
   id: string
   sender: string // "Sarah" 或 "You"
-  avatar: string // emoji
+  avatar?: string // emoji (optional)
   text: string
   vocabs: VocabInMessage[] // 消息中的单词标记
   isImage: boolean
