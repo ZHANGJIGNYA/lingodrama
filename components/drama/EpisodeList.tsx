@@ -23,7 +23,7 @@ export default function EpisodeList({
     if (completedEpisodes.includes(episode.id)) {
       return 'completed'
     }
-    if (episode.unlocked || masteryLevel >= episode.masteryRequired) {
+    if (episode.unlocked || masteryLevel >= (episode.masteryRequired || 0)) {
       return 'unlocked'
     }
     return 'locked'
