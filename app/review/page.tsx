@@ -63,10 +63,13 @@ export default function ReviewPage() {
 
   // Mock series data for DramaPlayer compatibility
   const mockSeries = {
-    id: 'fixed-dramas',
+    id: 'fixed-dramas' as any,
     title: 'LingoDrama Stories',
+    subtitle: 'Learn English through addictive short dramas',
     description: 'Learn English through addictive short dramas',
-    genre: 'drama' as const,
+    genre: 'drama',
+    emoji: '🎬',
+    gradient: 'from-purple-500 to-pink-500',
     coverImage: '/images/drama-cover.jpg',
     totalEpisodes: fixedDramas.length,
     episodes: fixedDramas
