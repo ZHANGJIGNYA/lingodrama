@@ -128,7 +128,7 @@ export default function ReviewPage() {
                           <span>•</span>
                           <span>{wordCount} words</span>
                           <span>•</span>
-                          <span className="capitalize">{drama.genre.replace('_', ' ')}</span>
+                          <span className="capitalize">{drama.genre?.replace('_', ' ') || 'Drama'}</span>
                         </div>
                       </div>
                       <button className="flex-shrink-0 w-12 h-12 rounded-full bg-electric-purple/10 hover:bg-electric-purple/20 flex items-center justify-center transition-colors">
