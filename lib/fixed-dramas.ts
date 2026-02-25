@@ -67,7 +67,7 @@ export const fixedDramas: DramaEpisode[] = [
       {
         id: 'msg-1-9',
         sender: 'Xiaoya',
-        text: 'I'm sorry! I was wrong about everything!',
+        text: "I'm sorry! I was wrong about everything!",
         vocabs: [],
         isImage: false,
       },
@@ -283,7 +283,7 @@ export const fixedDramas: DramaEpisode[] = [
       {
         id: 'msg-4-9',
         sender: 'Mrs. Wang',
-        text: 'I'm so sorry! I was wrong!',
+        text: "I'm so sorry! I was wrong!",
         vocabs: [],
         isImage: false,
       },
