@@ -1,84 +1,91 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useAppStore } from '@/lib/store'
-import type { DramaEpisode } from '@/lib/types'
-import { fixedDramas } from '@/lib/fixed-dramas'
-import DramaPlayer from '@/components/drama/DramaPlayer'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Play } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { useAppStore } from "@/lib/store";
+import type { DramaEpisode } from "@/lib/types";
+import { fixedDramas } from "@/lib/fixed-dramas";
+import DramaPlayer from "@/components/drama/DramaPlayer";
+import { motion, AnimatePresence } from "framer-motion";
+import { Play } from "lucide-react";
 
-type ViewState = 'drama-selection' | 'player'
+type ViewState = "drama-selection" | "player";
 
 export default function ReviewPage() {
-  const { vocabularyList, setVocabularyList } = useAppStore()
+  const { vocabularyList, setVocabularyList, setHideBottomNav } = useAppStore();
 
-  const [viewState, setViewState] = useState<ViewState>('drama-selection')
-  const [selectedDrama, setSelectedDrama] = useState<DramaEpisode | null>(null)
-  const [completedDramas, setCompletedDramas] = useState<number[]>([])
+  const [viewState, setViewState] = useState<ViewState>("drama-selection");
+  const [selectedDrama, setSelectedDrama] = useState<DramaEpisode | null>(null);
+  const [completedDramas, setCompletedDramas] = useState<number[]>([]);
+
+  useEffect(() => {
+    // 只有在播放器模式下才隐藏，其他模式（如剧本选择）都要显示
+    setHideBottomNav(viewState === "player");
+  }, [viewState, setHideBottomNav]);
 
   const handleSelectDrama = (drama: DramaEpisode) => {
-    setSelectedDrama(drama)
-    setViewState('player')
-  }
+    setSelectedDrama(drama);
+    setViewState("player");
+  };
 
   const handleBackToDramaSelection = () => {
-    setSelectedDrama(null)
-    setViewState('drama-selection')
-  }
+    setSelectedDrama(null);
+    setViewState("drama-selection");
+  };
 
   const handleDramaComplete = () => {
-    if (!selectedDrama) return
+    if (!selectedDrama) return;
 
     // Mark drama as completed
     if (!completedDramas.includes(selectedDrama.id)) {
-      setCompletedDramas([...completedDramas, selectedDrama.id])
+      setCompletedDramas([...completedDramas, selectedDrama.id]);
     }
 
     // Update vocabulary mastery levels for words in this drama
-    const dramaWords = selectedDrama.messages.flatMap(msg => msg.vocabs.map(v => v.word.toLowerCase()))
+    const dramaWords = selectedDrama.messages.flatMap((msg) =>
+      msg.vocabs.map((v) => v.word.toLowerCase()),
+    );
     const updatedVocabulary = vocabularyList.map((vocab) => {
       if (dramaWords.includes(vocab.word.toLowerCase())) {
-        const increase = Math.floor(Math.random() * 6) + 15
-        const newMastery = Math.min(100, vocab.mastery_level + increase)
+        const increase = Math.floor(Math.random() * 6) + 15;
+        const newMastery = Math.min(100, vocab.mastery_level + increase);
 
         return {
           ...vocab,
           mastery_level: newMastery,
           review_count: vocab.review_count + 1,
-          updated_at: new Date().toISOString()
-        }
+          updated_at: new Date().toISOString(),
+        };
       }
-      return vocab
-    })
+      return vocab;
+    });
 
-    setVocabularyList(updatedVocabulary)
+    setVocabularyList(updatedVocabulary);
 
     // Go back to drama selection
     setTimeout(() => {
-      setSelectedDrama(null)
-      setViewState('drama-selection')
-    }, 1500)
-  }
+      setSelectedDrama(null);
+      setViewState("drama-selection");
+    }, 1500);
+  };
 
   // Mock series data for DramaPlayer compatibility
   const mockSeries = {
-    id: 'fixed-dramas' as any,
-    title: 'LingoDrama Stories',
-    subtitle: 'Learn English through addictive short dramas',
-    description: 'Learn English through addictive short dramas',
-    genre: 'drama',
-    emoji: '🎬',
-    gradient: 'from-purple-500 to-pink-500',
-    coverImage: '/images/drama-cover.jpg',
+    id: "fixed-dramas" as any,
+    title: "LingoDrama Stories",
+    subtitle: "Learn English through addictive short dramas",
+    description: "Learn English through addictive short dramas",
+    genre: "drama",
+    emoji: "🎬",
+    gradient: "from-purple-500 to-pink-500",
+    coverImage: "/images/drama-cover.jpg",
     totalEpisodes: fixedDramas.length,
-    episodes: fixedDramas
-  }
+    episodes: fixedDramas,
+  };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background">
       <AnimatePresence mode="wait">
-        {viewState === 'drama-selection' && (
+        {viewState === "drama-selection" && (
           <motion.div
             key="drama-selection"
             initial={{ opacity: 0 }}
@@ -89,7 +96,9 @@ export default function ReviewPage() {
             {/* Header */}
             <div className="sticky top-0 z-20 px-4 py-4 bg-background/95 backdrop-blur-sm border-b border-border">
               <div className="max-w-4xl mx-auto">
-                <h1 className="font-serif text-2xl font-bold text-foreground">Choose Your Drama</h1>
+                <h1 className="font-serif text-2xl font-bold text-foreground">
+                  Choose Your Drama
+                </h1>
                 <p className="text-sm text-muted-foreground mt-1">
                   Select a story to start learning
                 </p>
@@ -99,8 +108,12 @@ export default function ReviewPage() {
             {/* Drama Cards */}
             <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
               {fixedDramas.map((drama, index) => {
-                const isCompleted = completedDramas.includes(drama.id)
-                const wordCount = new Set(drama.messages.flatMap(msg => msg.vocabs.map(v => v.word))).size
+                const isCompleted = completedDramas.includes(drama.id);
+                const wordCount = new Set(
+                  drama.messages.flatMap((msg) =>
+                    msg.vocabs.map((v) => v.word),
+                  ),
+                ).size;
 
                 return (
                   <motion.div
@@ -131,7 +144,9 @@ export default function ReviewPage() {
                           <span>•</span>
                           <span>{wordCount} words</span>
                           <span>•</span>
-                          <span className="capitalize">{drama.genre?.replace('_', ' ') || 'Drama'}</span>
+                          <span className="capitalize">
+                            {drama.genre?.replace("_", " ") || "Drama"}
+                          </span>
                         </div>
                       </div>
                       <button className="flex-shrink-0 w-12 h-12 rounded-full bg-electric-purple/10 hover:bg-electric-purple/20 flex items-center justify-center transition-colors">
@@ -139,13 +154,13 @@ export default function ReviewPage() {
                       </button>
                     </div>
                   </motion.div>
-                )
+                );
               })}
             </div>
           </motion.div>
         )}
 
-        {viewState === 'player' && selectedDrama && (
+        {viewState === "player" && selectedDrama && (
           <motion.div
             key="player"
             initial={{ opacity: 0 }}
@@ -162,5 +177,5 @@ export default function ReviewPage() {
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
