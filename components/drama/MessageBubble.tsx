@@ -128,8 +128,8 @@ export default function MessageBubble({
       className={`flex gap-3 mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}
     >
       {!isUser && (
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xl">
-          {message.avatar}
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-sm font-semibold text-gray-300">
+          {message.avatar || message.sender.charAt(0).toUpperCase()}
         </div>
       )}
 
@@ -151,8 +151,8 @@ export default function MessageBubble({
       </div>
 
       {isUser && (
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-700 flex items-center justify-center text-xl">
-          {message.avatar}
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-700 flex items-center justify-center text-sm font-semibold text-white">
+          {message.avatar || message.sender.charAt(0).toUpperCase()}
         </div>
       )}
     </motion.div>

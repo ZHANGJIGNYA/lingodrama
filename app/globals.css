@@ -171,6 +171,18 @@
   }
 }
 
+html, body {
+  /* 强制锁定视口高度，禁止 body 级别的滚动 */
+  height: 100%;
+  width: 100%;
+  /* 禁止移动端浏览器的下拉刷新回弹效果 */
+  overscroll-behavior-y: none;
+}
+
+#root, __next {
+  height: 100%;
+}
+
 /* Hide scrollbar for horizontal scroll areas */
 .scrollbar-hide {
   -ms-overflow-style: none;
