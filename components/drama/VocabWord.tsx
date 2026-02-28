@@ -1,36 +1,41 @@
-'use client'
+"use client";
 
-import type { ReviewType } from '@/lib/types'
+import type { ReviewType } from "@/lib/types";
 
 interface VocabWordProps {
-  word: string
-  type: ReviewType
-  revealed?: boolean
-  onClick: () => void
+  word: string;
+  type: ReviewType;
+  revealed?: boolean;
+  onClick: () => void;
 }
 
-export default function VocabWord({ word, type, revealed = false, onClick }: VocabWordProps) {
+export default function VocabWord({
+  word,
+  type,
+  revealed = false,
+  onClick,
+}: VocabWordProps) {
   // For partial_mask: show first 3 letters + underscores
   const getMaskedWord = (word: string) => {
-    const visibleLength = Math.min(3, Math.floor(word.length / 2))
-    const visible = word.slice(0, visibleLength)
-    const masked = '_'.repeat(word.length - visibleLength)
-    return visible + masked
-  }
+    const visibleLength = Math.min(3, Math.floor(word.length / 2));
+    const visible = word.slice(0, visibleLength);
+    const masked = "_".repeat(word.length - visibleLength);
+    return visible + masked;
+  };
 
   const renderWord = () => {
     switch (type) {
-      case 'highlight':
+      case "highlight":
         return (
           <span
             onClick={onClick}
-            className="text-yellow-300 font-bold underline decoration-wavy decoration-yellow-500 cursor-pointer animate-glow"
+            className="text-yellow-200 font-bold underline decoration-wavy decoration-yellow-500 cursor-pointer animate-glow"
           >
             {word}
           </span>
-        )
+        );
 
-      case 'underline':
+      case "underline":
         return (
           <span
             onClick={onClick}
@@ -38,9 +43,9 @@ export default function VocabWord({ word, type, revealed = false, onClick }: Voc
           >
             {word}
           </span>
-        )
+        );
 
-      case 'context':
+      case "context":
         return (
           <span
             onClick={onClick}
@@ -48,9 +53,9 @@ export default function VocabWord({ word, type, revealed = false, onClick }: Voc
           >
             {word}
           </span>
-        )
+        );
 
-      case 'partial_mask':
+      case "partial_mask":
         return (
           <span
             onClick={onClick}
@@ -58,19 +63,19 @@ export default function VocabWord({ word, type, revealed = false, onClick }: Voc
           >
             {revealed ? word : getMaskedWord(word)}
           </span>
-        )
+        );
 
-      case 'blank_fill':
+      case "blank_fill":
         return (
           <span
             onClick={onClick}
             className="inline-flex items-center justify-center bg-orange-600/50 px-3 py-0.5 rounded-md cursor-pointer hover:bg-orange-600/70 min-w-[60px]"
           >
-            {revealed ? word : '[?]'}
+            {revealed ? word : "[?]"}
           </span>
-        )
+        );
 
-      case 'natural':
+      case "natural":
         return (
           <span
             onClick={onClick}
@@ -78,12 +83,12 @@ export default function VocabWord({ word, type, revealed = false, onClick }: Voc
           >
             {word}
           </span>
-        )
+        );
 
       default:
-        return <span>{word}</span>
+        return <span>{word}</span>;
     }
-  }
+  };
 
-  return renderWord()
+  return renderWord();
 }

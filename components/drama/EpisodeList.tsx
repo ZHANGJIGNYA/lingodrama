@@ -1,15 +1,15 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import { ArrowLeft, Lock, CheckCircle, Clock, Play } from 'lucide-react'
-import type { DramaSeries, DramaEpisode } from '@/lib/types'
+import { motion } from "framer-motion";
+import { ArrowLeft, Lock, CheckCircle, Clock, Play } from "lucide-react";
+import type { DramaSeries, DramaEpisode } from "@/lib/types";
 
 interface EpisodeListProps {
-  series: DramaSeries
-  onBack: () => void
-  onSelectEpisode: (episode: DramaEpisode) => void
-  completedEpisodes?: number[]
-  masteryLevel?: number
+  series: DramaSeries;
+  onBack: () => void;
+  onSelectEpisode: (episode: DramaEpisode) => void;
+  completedEpisodes?: number[];
+  masteryLevel?: number;
 }
 
 export default function EpisodeList({
@@ -17,17 +17,17 @@ export default function EpisodeList({
   onBack,
   onSelectEpisode,
   completedEpisodes = [],
-  masteryLevel = 0
+  masteryLevel = 0,
 }: EpisodeListProps) {
   const getEpisodeStatus = (episode: DramaEpisode) => {
     if (completedEpisodes.includes(episode.id)) {
-      return 'completed'
+      return "completed";
     }
     if (episode.unlocked || masteryLevel >= (episode.masteryRequired || 0)) {
-      return 'unlocked'
+      return "unlocked";
     }
-    return 'locked'
-  }
+    return "locked";
+  };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -44,15 +44,21 @@ export default function EpisodeList({
 
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">{series.emoji}</div>
-            <h1 className="font-serif text-2xl font-bold text-foreground mb-1">{series.title}</h1>
+            <h1 className="font-serif text-2xl font-bold text-foreground mb-1">
+              {series.title}
+            </h1>
             <p className="text-sm text-muted-foreground">{series.subtitle}</p>
           </div>
 
           {/* Mastery Progress */}
           <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground uppercase tracking-wider">Your Mastery</span>
-              <span className="text-sm font-bold text-foreground">{masteryLevel}%</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                Your Mastery
+              </span>
+              <span className="text-sm font-bold text-foreground">
+                {masteryLevel}%
+              </span>
             </div>
             <div className="h-2 bg-secondary rounded-full overflow-hidden">
               <motion.div
@@ -68,9 +74,10 @@ export default function EpisodeList({
         {/* Episodes List */}
         <div className="space-y-3">
           {series.episodes.map((episode, index) => {
-            const status = getEpisodeStatus(episode)
-            const isLocked = status === 'locked'
-            const isCompleted = status === 'completed'
+            const status = getEpisodeStatus(episode);
+            // const isLocked = status === 'locked'
+            const isLocked = false;
+            const isCompleted = status === "completed";
 
             return (
               <motion.div
@@ -84,21 +91,23 @@ export default function EpisodeList({
                   disabled={isLocked}
                   className={`w-full text-left p-4 rounded-xl border transition-all ${
                     isLocked
-                      ? 'bg-secondary/30 border-border cursor-not-allowed opacity-50'
+                      ? "bg-secondary/30 border-border cursor-not-allowed opacity-50"
                       : isCompleted
-                      ? 'bg-card border-luxury-gold/50 hover:border-luxury-gold'
-                      : 'bg-card border-border hover:border-electric-purple/50'
+                        ? "bg-card border-luxury-gold/50 hover:border-luxury-gold"
+                        : "bg-card border-border hover:border-electric-purple/50"
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Episode Icon */}
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
-                      isLocked
-                        ? 'bg-secondary text-muted-foreground'
-                        : isCompleted
-                        ? 'bg-luxury-gold/20 text-luxury-gold'
-                        : 'bg-electric-purple/20 text-electric-purple'
-                    }`}>
+                    <div
+                      className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
+                        isLocked
+                          ? "bg-secondary text-muted-foreground"
+                          : isCompleted
+                            ? "bg-luxury-gold/20 text-luxury-gold"
+                            : "bg-electric-purple/20 text-electric-purple"
+                      }`}
+                    >
                       {isLocked ? (
                         <Lock className="w-5 h-5" />
                       ) : isCompleted ? (
@@ -125,9 +134,13 @@ export default function EpisodeList({
                         {episode.title}
                       </h3>
 
-                      <p className={`text-xs leading-relaxed line-clamp-2 ${
-                        isLocked ? 'text-muted-foreground/50' : 'text-muted-foreground'
-                      }`}>
+                      <p
+                        className={`text-xs leading-relaxed line-clamp-2 ${
+                          isLocked
+                            ? "text-muted-foreground/50"
+                            : "text-muted-foreground"
+                        }`}
+                      >
                         {episode.hook}
                       </p>
 
@@ -152,7 +165,7 @@ export default function EpisodeList({
                   </div>
                 </button>
               </motion.div>
-            )
+            );
           })}
         </div>
 
@@ -162,5 +175,5 @@ export default function EpisodeList({
         </div>
       </div>
     </div>
-  )
+  );
 }
