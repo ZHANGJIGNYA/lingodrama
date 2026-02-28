@@ -2,176 +2,119 @@
 
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import type { DramaEpisode } from "@/lib/types";
-import { fixedDramas } from "@/lib/fixed-dramas";
+import type { DramaSeries, DramaEpisode, SeriesType } from "@/lib/types";
+import { mockDramaSeries } from "@/lib/mockDramaSeries";
+import SeriesSelection from "@/components/drama/SeriesSelection";
+import EpisodeList from "@/components/drama/EpisodeList";
 import DramaPlayer from "@/components/drama/DramaPlayer";
-import { motion, AnimatePresence } from "framer-motion";
-import { Play } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
-type ViewState = "drama-selection" | "player";
+type ViewState = "series-selection" | "episode-selection" | "player";
 
 export default function ReviewPage() {
-  const { vocabularyList, setVocabularyList, setHideBottomNav } = useAppStore();
+  const { setHideBottomNav } = useAppStore();
 
-  const [viewState, setViewState] = useState<ViewState>("drama-selection");
-  const [selectedDrama, setSelectedDrama] = useState<DramaEpisode | null>(null);
-  const [completedDramas, setCompletedDramas] = useState<number[]>([]);
+  const [viewState, setViewState] = useState<ViewState>("series-selection");
+  const [selectedSeries, setSelectedSeries] = useState<DramaSeries | null>(
+    null,
+  );
+  const [selectedEpisode, setSelectedEpisode] = useState<DramaEpisode | null>(
+    null,
+  );
 
+  // 控制底部导航栏
   useEffect(() => {
-    // 只有在播放器模式下才隐藏，其他模式（如剧本选择）都要显示
     setHideBottomNav(viewState === "player");
   }, [viewState, setHideBottomNav]);
 
-  const handleSelectDrama = (drama: DramaEpisode) => {
-    setSelectedDrama(drama);
+  useEffect(() => {
+    return () => {
+      setHideBottomNav(false);
+    };
+  }, [setHideBottomNav]);
+
+  // 处理大类选择 (Series)
+  const handleSelectSeries = (seriesType: SeriesType) => {
+    const series = mockDramaSeries[seriesType];
+    if (series) {
+      setSelectedSeries(series);
+      setViewState("episode-selection");
+    }
+  };
+
+  // 处理具体集数选择 (Episode)
+  const handleSelectEpisode = (episode: DramaEpisode) => {
+    setSelectedEpisode(episode);
     setViewState("player");
   };
 
-  const handleBackToDramaSelection = () => {
-    setSelectedDrama(null);
-    setViewState("drama-selection");
+  // 返回大类选择
+  const handleBackToSeries = () => {
+    setSelectedSeries(null);
+    setViewState("series-selection");
   };
 
-  const handleDramaComplete = () => {
-    if (!selectedDrama) return;
+  // 从播放器返回集数选择
+  const handleBackToEpisodes = () => {
+    setSelectedEpisode(null);
+    setViewState("episode-selection");
+  };
 
-    // Mark drama as completed
-    if (!completedDramas.includes(selectedDrama.id)) {
-      setCompletedDramas([...completedDramas, selectedDrama.id]);
-    }
-
-    // Update vocabulary mastery levels for words in this drama
-    const dramaWords = selectedDrama.messages.flatMap((msg) =>
-      msg.vocabs.map((v) => v.word.toLowerCase()),
-    );
-    const updatedVocabulary = vocabularyList.map((vocab) => {
-      if (dramaWords.includes(vocab.word.toLowerCase())) {
-        const increase = Math.floor(Math.random() * 6) + 15;
-        const newMastery = Math.min(100, vocab.mastery_level + increase);
-
-        return {
-          ...vocab,
-          mastery_level: newMastery,
-          review_count: vocab.review_count + 1,
-          updated_at: new Date().toISOString(),
-        };
-      }
-      return vocab;
-    });
-
-    setVocabularyList(updatedVocabulary);
-
-    // Go back to drama selection
+  // 播放完成后的跳转
+  const handleEpisodeComplete = () => {
     setTimeout(() => {
-      setSelectedDrama(null);
-      setViewState("drama-selection");
+      setSelectedEpisode(null);
+      setViewState("episode-selection");
     }, 1500);
   };
 
-  // Mock series data for DramaPlayer compatibility
-  const mockSeries = {
-    id: "fixed-dramas" as any,
-    title: "LingoDrama Stories",
-    subtitle: "Learn English through addictive short dramas",
-    description: "Learn English through addictive short dramas",
-    genre: "drama",
-    emoji: "🎬",
-    gradient: "from-purple-500 to-pink-500",
-    coverImage: "/images/drama-cover.jpg",
-    totalEpisodes: fixedDramas.length,
-    episodes: fixedDramas,
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background relative">
       <AnimatePresence mode="wait">
-        {viewState === "drama-selection" && (
+        {/* 视图 1：大类选择 */}
+        {viewState === "series-selection" && (
           <motion.div
-            key="drama-selection"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="min-h-screen"
+            key="series-selection"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="w-full h-full"
           >
-            {/* Header */}
-            <div className="sticky top-0 z-20 px-4 py-4 bg-background/95 backdrop-blur-sm border-b border-border">
-              <div className="max-w-4xl mx-auto">
-                <h1 className="font-serif text-2xl font-bold text-foreground">
-                  Choose Your Drama
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Select a story to start learning
-                </p>
-              </div>
-            </div>
-
-            {/* Drama Cards */}
-            <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-              {fixedDramas.map((drama, index) => {
-                const isCompleted = completedDramas.includes(drama.id);
-                const wordCount = new Set(
-                  drama.messages.flatMap((msg) =>
-                    msg.vocabs.map((v) => v.word),
-                  ),
-                ).size;
-
-                return (
-                  <motion.div
-                    key={drama.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    onClick={() => handleSelectDrama(drama)}
-                    className="bg-card border border-border rounded-xl p-5 cursor-pointer hover:border-electric-purple transition-all hover:shadow-lg hover:shadow-electric-purple/10"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-serif text-lg font-bold text-foreground">
-                            {drama.title}
-                          </h3>
-                          {isCompleted && (
-                            <span className="text-xs bg-luxury-gold/20 text-luxury-gold px-2 py-0.5 rounded-full">
-                              ✓ Completed
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          {drama.hook}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>{drama.messages.length} messages</span>
-                          <span>•</span>
-                          <span>{wordCount} words</span>
-                          <span>•</span>
-                          <span className="capitalize">
-                            {drama.genre?.replace("_", " ") || "Drama"}
-                          </span>
-                        </div>
-                      </div>
-                      <button className="flex-shrink-0 w-12 h-12 rounded-full bg-electric-purple/10 hover:bg-electric-purple/20 flex items-center justify-center transition-colors">
-                        <Play className="w-5 h-5 text-electric-purple" />
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+            <SeriesSelection onSelectSeries={handleSelectSeries} />
           </motion.div>
         )}
 
-        {viewState === "player" && selectedDrama && (
+        {/* 视图 2：选集列表 */}
+        {viewState === "episode-selection" && selectedSeries && (
+          <motion.div
+            key="episode-selection"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="w-full min-h-screen"
+          >
+            <EpisodeList
+              series={selectedSeries}
+              onBack={handleBackToSeries}
+              onSelectEpisode={handleSelectEpisode}
+            />
+          </motion.div>
+        )}
+
+        {/* 视图 3：沉浸式播放器 */}
+        {viewState === "player" && selectedSeries && selectedEpisode && (
           <motion.div
             key="player"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="w-full h-screen fixed inset-0 z-50 bg-background"
           >
             <DramaPlayer
-              series={mockSeries}
-              episode={selectedDrama}
-              onBack={handleBackToDramaSelection}
-              onComplete={handleDramaComplete}
+              series={selectedSeries}
+              episode={selectedEpisode}
+              onBack={handleBackToEpisodes}
+              onComplete={handleEpisodeComplete}
             />
           </motion.div>
         )}
